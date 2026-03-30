@@ -29,9 +29,6 @@ targets:
       - path: Kcal-Kun
         excludes:
           - "App_Icon_Draft.icon/**"
-      - path: Kcal-Kun/App_Icon_Draft.icon
-        type: folder
-        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: Kcal-Kun
