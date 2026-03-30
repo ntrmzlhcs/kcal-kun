@@ -55,7 +55,7 @@
 		E70568DE967124998EBF126B /* CameraPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPickerView.swift; sourceTree = "<group>"; };
 		E73498C8E756F40E77C0ACB7 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 		EA6672F87448E0513470FD6F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		"TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_26DFF50E-7913-47E3-B69C-249660C2C78E" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -164,10 +164,10 @@
 			);
 			sourceTree = "<group>";
 		};
-		"TEMP_0F4483AD-BB1F-49F5-850A-DF7F7DD7E8FD" /* Kcal-Kun */ = {
+		"TEMP_AA36EA7F-8FA3-4898-A6DB-ED6DC0B7773B" /* Kcal-Kun */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */,
+				"TEMP_26DFF50E-7913-47E3-B69C-249660C2C78E" /* Secrets.xcconfig */,
 			);
 			path = "Kcal-Kun";
 			sourceTree = "<group>";
@@ -268,10 +268,10 @@
 /* Begin XCBuildConfiguration section */
 		2C84850867EB81A3FC3743CB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_26DFF50E-7913-47E3-B69C-249660C2C78E" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ENABLE_PREVIEWS = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -312,10 +312,10 @@
 		};
 		850A62343C78CB0AD15B58FE /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_26DFF50E-7913-47E3-B69C-249660C2C78E" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ENABLE_PREVIEWS = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
