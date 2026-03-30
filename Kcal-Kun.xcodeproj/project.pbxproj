@@ -1,0 +1,351 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		027B9475748EBB9DE328F069 /* MealSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82BF815B21651C3BCA0BF6CE /* MealSlot.swift */; };
+		36144CBF0DC5FC6BAC73F45E /* DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3170E0C4CB4236B485C68809 /* DiaryView.swift */; };
+		377B5C2A70F5602D660953EF /* DiaryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595607E4A30ED2BA925C068E /* DiaryEntry.swift */; };
+		4737277438E3A15E8E28A487 /* ScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2D0DE8B14125B56D0D065A /* ScannerView.swift */; };
+		6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B290406F36C8A8745A392294 /* StatsView.swift */; };
+		8942DF7FECFA3AA8E201E0F9 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6672F87448E0513470FD6F /* MainTabView.swift */; };
+		911FF8DADE0E8BD2310F0DC5 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D46DE566AE2DDEC54645227 /* LibraryView.swift */; };
+		955C59BFDEA8C801C920819F /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D3DF9F474D59E56F7FF7FB /* GeminiService.swift */; };
+		97D3B417A1EBC9DC860B88E7 /* DataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A170846B94D539D35D4A200 /* DataSeeder.swift */; };
+		A646721F222785D399D38350 /* CameraPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70568DE967124998EBF126B /* CameraPickerView.swift */; };
+		AED612A427A92D4620AF451F /* ScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */; };
+		CDBDD8F4D7D12C1778637450 /* ProductSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BD64646A6A591F52455AA4 /* ProductSource.swift */; };
+		EDBA34CDE6CD6AA72FB81B54 /* AddEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83923A87406A6E661B0C9A45 /* AddEntryView.swift */; };
+		F61AE35088B1D34E48A8C7CC /* ScanConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */; };
+		F6A9CB2A74B38F4E94D088F9 /* KcalKunApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */; };
+		F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */; };
+		FBE064D05FADB5933DB36ABA /* Product.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA34AC6D29608E2EEC481963 /* Product.swift */; };
+		FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */ = {isa = PBXBuildFile; fileRef = 64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanConfirmationView.swift; sourceTree = "<group>"; };
+		29153459687B1CD24A67832E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3170E0C4CB4236B485C68809 /* DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryView.swift; sourceTree = "<group>"; };
+		36AF2FF5C88242D96FD58F6A /* AI_INTEGRATION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI_INTEGRATION.md; sourceTree = "<group>"; };
+		4AD9493B7D7BA8640E3F0E31 /* ROADMAP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ROADMAP.md; sourceTree = "<group>"; };
+		564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		595607E4A30ED2BA925C068E /* DiaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEntry.swift; sourceTree = "<group>"; };
+		6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunApp.swift; sourceTree = "<group>"; };
+		64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreloadedFoods.json; sourceTree = "<group>"; };
+		64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */ = {isa = PBXFileReference; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
+		6A170846B94D539D35D4A200 /* DataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSeeder.swift; sourceTree = "<group>"; };
+		82BF815B21651C3BCA0BF6CE /* MealSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealSlot.swift; sourceTree = "<group>"; };
+		83923A87406A6E661B0C9A45 /* AddEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEntryView.swift; sourceTree = "<group>"; };
+		8D46DE566AE2DDEC54645227 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		94BD64646A6A591F52455AA4 /* ProductSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductSource.swift; sourceTree = "<group>"; };
+		B290406F36C8A8745A392294 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		B756BEE1E88618059BF3B4BC /* SETUP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SETUP.md; sourceTree = "<group>"; };
+		BB2E08FEC2ACC49DCC5F38D0 /* ARCHITECTURE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE.md; sourceTree = "<group>"; };
+		BBA8358560709A2BCFA86EFD /* DATA_MODEL.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DATA_MODEL.md; sourceTree = "<group>"; };
+		BF2D0DE8B14125B56D0D065A /* ScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerView.swift; sourceTree = "<group>"; };
+		CA34AC6D29608E2EEC481963 /* Product.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Product.swift; sourceTree = "<group>"; };
+		D3F4D64FF281A1A6324FF0C1 /* Kcal-Kun.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Kcal-Kun.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5D3DF9F474D59E56F7FF7FB /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
+		E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerViewModel.swift; sourceTree = "<group>"; };
+		E70568DE967124998EBF126B /* CameraPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPickerView.swift; sourceTree = "<group>"; };
+		E73498C8E756F40E77C0ACB7 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
+		EA6672F87448E0513470FD6F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		"TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		068BA48B2C1B2113315D033B /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				83923A87406A6E661B0C9A45 /* AddEntryView.swift */,
+				E70568DE967124998EBF126B /* CameraPickerView.swift */,
+				13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		09757D9E7B6A9BC857EA9446 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				6A170846B94D539D35D4A200 /* DataSeeder.swift */,
+				D5D3DF9F474D59E56F7FF7FB /* GeminiService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		4179048ACC8E0CC2D60F3E21 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3170E0C4CB4236B485C68809 /* DiaryView.swift */,
+				8D46DE566AE2DDEC54645227 /* LibraryView.swift */,
+				BF2D0DE8B14125B56D0D065A /* ScannerView.swift */,
+				B290406F36C8A8745A392294 /* StatsView.swift */,
+				068BA48B2C1B2113315D033B /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		417A38058FF7801ACA4CDF06 /* docs */ = {
+			isa = PBXGroup;
+			children = (
+				36AF2FF5C88242D96FD58F6A /* AI_INTEGRATION.md */,
+				BB2E08FEC2ACC49DCC5F38D0 /* ARCHITECTURE.md */,
+				E73498C8E756F40E77C0ACB7 /* CONTRIBUTING.md */,
+				BBA8358560709A2BCFA86EFD /* DATA_MODEL.md */,
+				4AD9493B7D7BA8640E3F0E31 /* ROADMAP.md */,
+				B756BEE1E88618059BF3B4BC /* SETUP.md */,
+			);
+			path = docs;
+			sourceTree = "<group>";
+		};
+		4F492F84DDA28536356B8C59 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */,
+				64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		574DFF1EC8173AC58CF94F70 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D3F4D64FF281A1A6324FF0C1 /* Kcal-Kun.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		71BBCC43A8E4C46FD9B3A309 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				595607E4A30ED2BA925C068E /* DiaryEntry.swift */,
+				82BF815B21651C3BCA0BF6CE /* MealSlot.swift */,
+				CA34AC6D29608E2EEC481963 /* Product.swift */,
+				94BD64646A6A591F52455AA4 /* ProductSource.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		976BAC4BBF90BBB2BF965E28 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A99C0B7B749964EE79891364 /* Kcal-Kun */ = {
+			isa = PBXGroup;
+			children = (
+				29153459687B1CD24A67832E /* Info.plist */,
+				6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */,
+				EA6672F87448E0513470FD6F /* MainTabView.swift */,
+				71BBCC43A8E4C46FD9B3A309 /* Models */,
+				4F492F84DDA28536356B8C59 /* Resources */,
+				09757D9E7B6A9BC857EA9446 /* Services */,
+				976BAC4BBF90BBB2BF965E28 /* ViewModels */,
+				4179048ACC8E0CC2D60F3E21 /* Views */,
+			);
+			path = "Kcal-Kun";
+			sourceTree = "<group>";
+		};
+		F4E4DE53B20BADDEFFFFADD4 = {
+			isa = PBXGroup;
+			children = (
+				64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */,
+				417A38058FF7801ACA4CDF06 /* docs */,
+				A99C0B7B749964EE79891364 /* Kcal-Kun */,
+				574DFF1EC8173AC58CF94F70 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		"TEMP_0F4483AD-BB1F-49F5-850A-DF7F7DD7E8FD" /* Kcal-Kun */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */,
+			);
+			path = "Kcal-Kun";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		78EC038546F311793D7CEC66 /* Kcal-Kun */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6B3CA8FDD200EE12A5A4DDDD /* Build configuration list for PBXNativeTarget "Kcal-Kun" */;
+			buildPhases = (
+				E578A25B0CF2D8B32C8BECA8 /* Sources */,
+				665522A6DA18432EFC853251 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Kcal-Kun";
+			packageProductDependencies = (
+			);
+			productName = "Kcal-Kun";
+			productReference = D3F4D64FF281A1A6324FF0C1 /* Kcal-Kun.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F60CF31BBB1EBC443951E0EA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					78EC038546F311793D7CEC66 = {
+						DevelopmentTeam = "$(DEVELOPMENT_TEAM)";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 890C122A49FB9E650A6744B9 /* Build configuration list for PBXProject "Kcal-Kun" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F4E4DE53B20BADDEFFFFADD4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 574DFF1EC8173AC58CF94F70 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				78EC038546F311793D7CEC66 /* Kcal-Kun */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		665522A6DA18432EFC853251 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */,
+				FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E578A25B0CF2D8B32C8BECA8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDBA34CDE6CD6AA72FB81B54 /* AddEntryView.swift in Sources */,
+				A646721F222785D399D38350 /* CameraPickerView.swift in Sources */,
+				97D3B417A1EBC9DC860B88E7 /* DataSeeder.swift in Sources */,
+				377B5C2A70F5602D660953EF /* DiaryEntry.swift in Sources */,
+				36144CBF0DC5FC6BAC73F45E /* DiaryView.swift in Sources */,
+				955C59BFDEA8C801C920819F /* GeminiService.swift in Sources */,
+				F6A9CB2A74B38F4E94D088F9 /* KcalKunApp.swift in Sources */,
+				911FF8DADE0E8BD2310F0DC5 /* LibraryView.swift in Sources */,
+				8942DF7FECFA3AA8E201E0F9 /* MainTabView.swift in Sources */,
+				027B9475748EBB9DE328F069 /* MealSlot.swift in Sources */,
+				FBE064D05FADB5933DB36ABA /* Product.swift in Sources */,
+				CDBDD8F4D7D12C1778637450 /* ProductSource.swift in Sources */,
+				F61AE35088B1D34E48A8C7CC /* ScanConfirmationView.swift in Sources */,
+				4737277438E3A15E8E28A487 /* ScannerView.swift in Sources */,
+				AED612A427A92D4620AF451F /* ScannerViewModel.swift in Sources */,
+				6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2C84850867EB81A3FC3743CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ENABLE_PREVIEWS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		4535A2E45BD0B54C7F0D3F96 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
+				INFOPLIST_FILE = "Kcal-Kun/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.martin.kcal-kun";
+				PRODUCT_NAME = "Kcal-Kun";
+			};
+			name = Debug;
+		};
+		58D99F822A4580916DC72F95 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
+				INFOPLIST_FILE = "Kcal-Kun/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.martin.kcal-kun";
+				PRODUCT_NAME = "Kcal-Kun";
+			};
+			name = Release;
+		};
+		850A62343C78CB0AD15B58FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_B9F62D33-7A1D-43F2-9BD7-B60F6BF0F805" /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ENABLE_PREVIEWS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6B3CA8FDD200EE12A5A4DDDD /* Build configuration list for PBXNativeTarget "Kcal-Kun" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4535A2E45BD0B54C7F0D3F96 /* Debug */,
+				58D99F822A4580916DC72F95 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		890C122A49FB9E650A6744B9 /* Build configuration list for PBXProject "Kcal-Kun" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				850A62343C78CB0AD15B58FE /* Debug */,
+				2C84850867EB81A3FC3743CB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F60CF31BBB1EBC443951E0EA /* Project object */;
+}
