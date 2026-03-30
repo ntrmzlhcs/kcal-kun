@@ -23,6 +23,11 @@ struct DiaryView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Date navigator
+                Section {
+                    DateNavigator(selectedDate: $selectedDate)
+                }
+
                 // Kcal summary
                 Section {
                     KcalSummaryCard(kcal: totalKcal)
@@ -63,10 +68,6 @@ struct DiaryView: View {
                 }
             }
             .navigationTitle("Tagebuch")
-            .safeAreaInset(edge: .top, spacing: 0) {
-                DateNavigator(selectedDate: $selectedDate)
-                    .background(.bar)
-            }
             .sheet(item: $activeSheet) { slot in
                 AddEntryView(selectedDate: selectedDate, initialSlot: slot)
             }
