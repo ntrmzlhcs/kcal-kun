@@ -26,48 +26,47 @@ struct DiaryView: View {
                 DateNavigator(selectedDate: $selectedDate)
                     .padding(.horizontal)
 
-            List {
-                // Kcal summary
-                Section {
-                    KcalSummaryCard(kcal: totalKcal)
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-
-                // Meal slots
-                ForEach(MealSlot.allCases) { slot in
-                    let slotEntries = entries(for: slot)
-                    let slotKcal = slotEntries.reduce(0) { $0 + $1.kcal }
-
+                List {
+                    // Kcal summary
                     Section {
-                        ForEach(slotEntries) { entry in
-                            DiaryEntryRow(entry: entry)
-                        }
-                        .onDelete { indexSet in
-                            deleteEntries(slotEntries, at: indexSet)
-                        }
+                        KcalSummaryCard(kcal: totalKcal)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
 
-                        Button {
-                            activeSheet = slot
-                        } label: {
-                            Label("Hinzufügen", systemImage: "plus.circle")
-                                .foregroundStyle(.tint)
-                        }
-                    } header: {
-                        HStack {
-                            Label(slot.rawValue, systemImage: slot.systemImage)
-                            Spacer()
-                            if slotKcal > 0 {
-                                Text("\(Int(slotKcal)) kcal")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                    // Meal slots
+                    ForEach(MealSlot.allCases) { slot in
+                        let slotEntries = entries(for: slot)
+                        let slotKcal = slotEntries.reduce(0) { $0 + $1.kcal }
+
+                        Section {
+                            ForEach(slotEntries) { entry in
+                                DiaryEntryRow(entry: entry)
+                            }
+                            .onDelete { indexSet in
+                                deleteEntries(slotEntries, at: indexSet)
+                            }
+
+                            Button {
+                                activeSheet = slot
+                            } label: {
+                                Label("Hinzufügen", systemImage: "plus.circle")
+                                    .foregroundStyle(.tint)
+                            }
+                        } header: {
+                            HStack {
+                                Label(slot.rawValue, systemImage: slot.systemImage)
+                                Spacer()
+                                if slotKcal > 0 {
+                                    Text("\(Int(slotKcal)) kcal")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
                 }
             }
-            } // List
-            } // VStack
             .navigationTitle("Tagebuch")
             .sheet(item: $activeSheet) { slot in
                 AddEntryView(selectedDate: selectedDate, initialSlot: slot)
