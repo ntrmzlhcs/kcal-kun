@@ -177,10 +177,7 @@ struct DateNavigator: View {
             Spacer()
 
             Button {
-                let next = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
-                if next <= Date() {
-                    selectedDate = next
-                }
+                selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
             } label: {
                 Image(systemName: "chevron.right")
                     .font(.title3)
