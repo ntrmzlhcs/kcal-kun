@@ -38,7 +38,7 @@ enum GeminiServiceError: LocalizedError {
 }
 
 struct GeminiService {
-    static let modelName = "gemini-2.5-flash-preview-09-2025"
+    static let modelName = "gemini-2.5-flash"
 
     private static let extractionPrompt = """
         You are a nutrition data extraction assistant.
