@@ -7,7 +7,7 @@ struct StatsView: View {
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
 
     private var dayEntries: [DiaryEntry] {
-        allEntries.filter { Calendar.current.isDate($0.date, inDayOf: selectedDate) }
+        allEntries.filter { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
     }
 
     private var totals: MacroTotals {

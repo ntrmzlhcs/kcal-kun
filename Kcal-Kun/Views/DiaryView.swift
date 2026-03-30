@@ -9,7 +9,7 @@ struct DiaryView: View {
     @State private var activeSheet: MealSlot? = nil
 
     private var dayEntries: [DiaryEntry] {
-        allEntries.filter { Calendar.current.isDate($0.date, inDayOf: selectedDate) }
+        allEntries.filter { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
     }
 
     private func entries(for slot: MealSlot) -> [DiaryEntry] {
