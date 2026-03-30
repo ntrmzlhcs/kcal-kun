@@ -13,6 +13,7 @@ final class DiaryEntry {
     var protein: Double
     var fat: Double
     var carbs: Double
+    var fiber: Double
 
     init(
         id: UUID = UUID(),
@@ -31,5 +32,6 @@ final class DiaryEntry {
         self.protein = product.proteinPer100g * factor
         self.fat     = product.fatPer100g     * factor
         self.carbs   = product.carbsPer100g   * factor
+        self.fiber   = (product.fiberPer100g ?? 0) * factor
     }
 }

@@ -12,6 +12,9 @@ struct MainTabView: View {
             Tab("Scanner", systemImage: "camera.viewfinder") {
                 ScannerView()
             }
+            Tab("Statistik", systemImage: "chart.pie") {
+                StatsView()
+            }
         }
     }
 }
