@@ -27,12 +27,18 @@ targets:
     deploymentTarget: "18.0"
     sources:
       - path: Kcal-Kun
+        excludes:
+          - "App_Icon_Draft.icon/**"
+      - path: Kcal-Kun/App_Icon_Draft.icon
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: Kcal-Kun
         PRODUCT_BUNDLE_IDENTIFIER: com.martin.kcal-kun
         DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
     info:
