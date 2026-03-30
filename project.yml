@@ -1,0 +1,46 @@
+name: Kcal-Kun
+options:
+  bundleIdPrefix: com.martin
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "26.4"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+configFiles:
+  Debug: Secrets.xcconfig
+  Release: Secrets.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    ENABLE_PREVIEWS: "YES"
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+targets:
+  Kcal-Kun:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Kcal-Kun
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.martin.kcal-kun
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: Kcal-Kun/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: ""
+        NSCameraUsageDescription: "Kcal-Kun verwendet die Kamera, um Nährwerttabellen auf Verpackungen zu scannen."
+        GEMINI_API_KEY: "$(GEMINI_API_KEY)"
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+
+fileGroups:
+  - docs
+  - Secrets.xcconfig.template

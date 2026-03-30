@@ -1,0 +1,50 @@
+# Secrets — NEVER commit
+Secrets.xcconfig
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+*.xcuserdatad/
+xcuserdata/
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.pbxuser
+
+# Build
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods (not used in MVP, but just in case)
+Pods/
+*.xcworkspace
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# XcodeGen output — Regenerieren mit: .tools/xcodegen generate
+Kcal-Kun.xcodeproj/
+
+# XcodeGen binary
+.tools/
+
+# Other
+*.log
