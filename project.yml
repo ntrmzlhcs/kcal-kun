@@ -27,8 +27,6 @@ targets:
     deploymentTarget: "18.0"
     sources:
       - path: Kcal-Kun
-        excludes:
-          - "App_Icon_Draft.icon/**"
     settings:
       base:
         PRODUCT_NAME: Kcal-Kun
