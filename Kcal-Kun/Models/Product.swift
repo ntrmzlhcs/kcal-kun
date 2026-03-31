@@ -15,7 +15,7 @@ final class Product {
     var saltPer100g: Double?
     var servingSizeGrams: Double?
     var source: ProductSource
-    var isFavorite: Bool
+    var isFavorite: Bool = false
     var createdAt: Date
     var imageData: Data?
 
