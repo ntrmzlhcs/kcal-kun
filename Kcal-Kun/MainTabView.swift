@@ -6,14 +6,14 @@ struct MainTabView: View {
             Tab("Tagebuch", systemImage: "book") {
                 DiaryView()
             }
+            Tab("Statistik", systemImage: "chart.pie") {
+                StatsView()
+            }
             Tab("Bibliothek", systemImage: "books.vertical") {
                 LibraryView()
             }
             Tab("Scanner", systemImage: "camera.viewfinder") {
                 ScannerView()
-            }
-            Tab("Statistik", systemImage: "chart.pie") {
-                StatsView()
             }
         }
     }
