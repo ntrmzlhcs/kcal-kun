@@ -22,6 +22,8 @@
 	<string>$(GEMINI_API_KEY)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Kcal-Kun verwendet die Kamera, um Nährwerttabellen auf Verpackungen zu scannen.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Kcal-Kun liest Bewegungskalorien aus Workouts für die Tagesübersicht.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

@@ -3,10 +3,15 @@ import SwiftData
 
 struct DiaryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(HealthKitService.self) private var healthKit
     @Query private var allEntries: [DiaryEntry]
+    @Query private var profiles: [UserProfile]
 
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var activeSheet: MealSlot? = nil
+    @State private var showProfile = false
+
+    private var profile: UserProfile? { profiles.first }
 
     private var dayEntries: [DiaryEntry] {
         allEntries.filter { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
@@ -27,9 +32,17 @@ struct DiaryView: View {
                     .padding(.horizontal)
 
                 List {
-                    // Kcal summary
+                    // Kcal summary / progress
                     Section {
-                        KcalSummaryCard(kcal: totalKcal)
+                        if let profile {
+                            KcalProgressView(
+                                consumed: totalKcal,
+                                profile: profile,
+                                workoutKcal: healthKit.workoutKcalToday
+                            )
+                        } else {
+                            KcalSummaryCard(kcal: totalKcal)
+                        }
                     }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -68,9 +81,39 @@ struct DiaryView: View {
                 }
             }
             .navigationTitle("Tagebuch")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showProfile = true } label: {
+                        avatarView
+                    }
+                }
+            }
             .sheet(item: $activeSheet) { slot in
                 AddEntryView(selectedDate: selectedDate, initialSlot: slot)
             }
+            .sheet(isPresented: $showProfile) {
+                ProfileView()
+            }
+            .task(id: selectedDate) {
+                if Calendar.current.isDateInToday(selectedDate) {
+                    await healthKit.fetchTodayWorkoutKcal()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var avatarView: some View {
+        if let data = profile?.photoData, let uiImage = UIImage(data: data) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 32, height: 32)
+                .clipShape(Circle())
+        } else {
+            Image(systemName: "person.circle.fill")
+                .font(.title2)
+                .foregroundStyle(.secondary)
         }
     }
 
