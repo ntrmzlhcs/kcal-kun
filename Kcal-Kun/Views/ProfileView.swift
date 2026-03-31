@@ -108,7 +108,7 @@ struct ProfileView: View {
                 }
             }
             .onChange(of: photoItem) { _, newItem in
-                Task {
+                Task { @MainActor in
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
                         photoData = data
                     }
