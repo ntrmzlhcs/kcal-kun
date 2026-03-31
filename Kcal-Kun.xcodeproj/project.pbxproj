@@ -25,6 +25,7 @@
 		F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */; };
 		FBE064D05FADB5933DB36ABA /* Product.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA34AC6D29608E2EEC481963 /* Product.swift */; };
 		FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */ = {isa = PBXBuildFile; fileRef = 64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */; };
+		B500BCDF23564B05882482C5 /* BLVFoods.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BA0BC210EE545E484BC475F /* BLVFoods.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		595607E4A30ED2BA925C068E /* DiaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEntry.swift; sourceTree = "<group>"; };
 		6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunApp.swift; sourceTree = "<group>"; };
 		64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreloadedFoods.json; sourceTree = "<group>"; };
+		6BA0BC210EE545E484BC475F /* BLVFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = BLVFoods.json; sourceTree = "<group>"; };
 		64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
 		6A170846B94D539D35D4A200 /* DataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSeeder.swift; sourceTree = "<group>"; };
 		82BF815B21651C3BCA0BF6CE /* MealSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealSlot.swift; sourceTree = "<group>"; };
@@ -108,6 +110,7 @@
 			children = (
 				564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */,
 				64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */,
+				6BA0BC210EE545E484BC475F /* BLVFoods.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -234,6 +237,7 @@
 			files = (
 				F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */,
 				FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */,
+				B500BCDF23564B05882482C5 /* BLVFoods.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,6 +277,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				DEVELOPMENT_TEAM = J9PFL4M87B;
 				ENABLE_PREVIEWS = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				SDKROOT = iphoneos;
@@ -319,6 +324,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				DEVELOPMENT_TEAM = J9PFL4M87B;
 				ENABLE_PREVIEWS = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				SDKROOT = iphoneos;

@@ -22,10 +22,30 @@ struct AddEntryView: View {
         _selectedSlot = State(initialValue: initialSlot)
     }
 
-    private var filteredProducts: [Product] {
-        if searchText.isEmpty { return allProducts }
-        return allProducts.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    // MARK: - Filtered lists
+
+    private var isSearching: Bool { !searchText.isEmpty }
+
+    private var favorites: [Product] {
+        let base = allProducts.filter { $0.isFavorite }
+        guard isSearching else { return base }
+        return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
+
+    private var myProducts: [Product] {
+        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual }
+        guard isSearching else { return base }
+        return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    private var databaseProducts: [Product] {
+        guard isSearching else { return [] }
+        return allProducts.filter {
+            $0.source == .preloaded && $0.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    // MARK: - Gram parsing
 
     private var grams: Double? {
         let normalized = gramsText.replacingOccurrences(of: ",", with: ".")
@@ -36,6 +56,8 @@ struct AddEntryView: View {
     private var canAdd: Bool {
         selectedProduct != nil && (grams ?? 0) > 0
     }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -50,28 +72,79 @@ struct AddEntryView: View {
     // MARK: - Phase 1: Produkt wählen
 
     private var productPickerView: some View {
-        List(filteredProducts) { product in
-            Button {
-                selectedProduct = product
-                gramsText = ""
-                gramsFocused = true
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(product.name)
-                        .foregroundStyle(.primary)
-                    Text("\(Int(product.kcalPer100g)) kcal / 100g")
-                        .font(.caption)
+        List {
+            if !favorites.isEmpty {
+                Section("Favoriten") {
+                    ForEach(favorites) { product in
+                        productRow(product)
+                    }
+                }
+            }
+
+            if !myProducts.isEmpty {
+                Section("Meine Produkte") {
+                    ForEach(myProducts) { product in
+                        productRow(product)
+                    }
+                }
+            }
+
+            if isSearching {
+                if !databaseProducts.isEmpty {
+                    Section("Datenbank") {
+                        ForEach(databaseProducts) { product in
+                            productRow(product)
+                        }
+                    }
+                }
+            } else if favorites.isEmpty && myProducts.isEmpty {
+                Section {
+                    Text("Suche in der Datenbank, um generische Lebensmittel zu finden (z. B. «Brokkoli», «Lachs»).")
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
             }
         }
-        .searchable(text: $searchText, prompt: "Produkt suchen")
+        .searchable(text: $searchText, prompt: "Suchen (Brokkoli, Lachs, ...)")
         .navigationTitle("Produkt wählen")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Abbrechen") { dismiss() }
             }
+        }
+    }
+
+    private func productRow(_ product: Product) -> some View {
+        HStack {
+            Button {
+                selectedProduct = product
+                gramsText = ""
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(product.name)
+                        .foregroundStyle(.primary)
+                    HStack(spacing: 6) {
+                        Text("\(Int(product.kcalPer100g)) kcal / 100g")
+                        if product.source == .ocr {
+                            Text("· Gescannt").foregroundStyle(.blue)
+                        } else if product.source == .manual {
+                            Text("· Manuell").foregroundStyle(.purple)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            Spacer()
+            Button {
+                product.isFavorite.toggle()
+            } label: {
+                Image(systemName: product.isFavorite ? "star.fill" : "star")
+                    .foregroundStyle(product.isFavorite ? .yellow : .secondary)
+            }
+            .buttonStyle(.plain)
         }
     }
 

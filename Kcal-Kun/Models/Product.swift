@@ -15,6 +15,7 @@ final class Product {
     var saltPer100g: Double?
     var servingSizeGrams: Double?
     var source: ProductSource
+    var isFavorite: Bool
     var createdAt: Date
     var imageData: Data?
 
@@ -34,6 +35,7 @@ final class Product {
         saltPer100g: Double? = nil,
         servingSizeGrams: Double? = nil,
         source: ProductSource,
+        isFavorite: Bool = false,
         createdAt: Date = Date(),
         imageData: Data? = nil
     ) {
@@ -49,6 +51,7 @@ final class Product {
         self.saltPer100g = saltPer100g
         self.servingSizeGrams = servingSizeGrams
         self.source = source
+        self.isFavorite = isFavorite
         self.createdAt = createdAt
         self.imageData = imageData
     }

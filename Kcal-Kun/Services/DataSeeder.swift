@@ -3,27 +3,35 @@ import SwiftData
 
 @MainActor
 struct DataSeeder {
-    private static let seededKey = "hasSeededPreloadedFoods"
+    // Neue Key-Version erzwingt Re-Seed mit BLV-Datenbank v7
+    private static let seededKey = "hasSeededBLVv7"
 
     static func seedIfNeeded(context: ModelContext) async {
         guard !UserDefaults.standard.bool(forKey: seededKey) else { return }
         do {
-            try seed(context: context)
+            try reseedBLV(context: context)
             UserDefaults.standard.set(true, forKey: seededKey)
         } catch {
             print("[DataSeeder] Fehler beim Seeden: \(error)")
         }
     }
 
-    private static func seed(context: ModelContext) throws {
-        guard let url = Bundle.main.url(forResource: "PreloadedFoods", withExtension: "json") else {
+    private static func reseedBLV(context: ModelContext) throws {
+        // Bestehende Preloaded-Einträge löschen (alte 30er-Liste)
+        let existing = try context.fetch(FetchDescriptor<Product>(
+            predicate: #Predicate { $0.source == ProductSource.preloaded }
+        ))
+        for product in existing {
+            context.delete(product)
+        }
+
+        guard let url = Bundle.main.url(forResource: "BLVFoods", withExtension: "json") else {
             throw DataSeederError.fileNotFound
         }
         let items = try JSONDecoder().decode([ProductSeed].self, from: Data(contentsOf: url))
         for item in items {
             context.insert(Product(
                 name: item.name,
-                brand: item.brand,
                 kcalPer100g: item.kcalPer100g,
                 proteinPer100g: item.proteinPer100g,
                 fatPer100g: item.fatPer100g,
@@ -31,24 +39,21 @@ struct DataSeeder {
                 fiberPer100g: item.fiberPer100g,
                 sugarPer100g: item.sugarPer100g,
                 saltPer100g: item.saltPer100g,
-                servingSizeGrams: item.servingSizeGrams,
                 source: .preloaded
             ))
         }
         try context.save()
+        print("[DataSeeder] \(items.count) BLV-Produkte geladen.")
     }
 }
 
 enum DataSeederError: LocalizedError {
     case fileNotFound
-    var errorDescription: String? {
-        "PreloadedFoods.json wurde im App-Bundle nicht gefunden."
-    }
+    var errorDescription: String? { "BLVFoods.json wurde im App-Bundle nicht gefunden." }
 }
 
 private struct ProductSeed: Decodable {
     let name: String
-    let brand: String?
     let kcalPer100g: Double
     let proteinPer100g: Double
     let fatPer100g: Double
@@ -56,5 +61,4 @@ private struct ProductSeed: Decodable {
     let fiberPer100g: Double?
     let sugarPer100g: Double?
     let saltPer100g: Double?
-    let servingSizeGrams: Double?
 }
