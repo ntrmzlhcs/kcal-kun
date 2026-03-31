@@ -8,76 +8,76 @@
 
 ---
 
-## Phase 1 — Foundation
+## Phase 1 — Foundation ✅
 
 *Ziel: Lauffähiges Xcode-Projekt mit SwiftData-Stack und navigierbarer Tab-Bar.*
 
-- [ ] Xcode-Projekt erstellen (SwiftUI Lifecycle, iOS 18.0, Bundle ID setzen)
-- [ ] `Secrets.xcconfig` anlegen und in `.gitignore` eintragen
-- [ ] SwiftData `ModelContainer` konfigurieren (`Product`, `DiaryEntry`)
-- [ ] `PreloadedFoods.json` erstellen (~30 Schweizer Frischprodukte)
-- [ ] `DataSeeder` implementieren — lädt JSON bei erstem App-Start in SwiftData
-- [ ] Tab-Bar-Scaffold: Tabs **Tagebuch**, **Bibliothek**, **Scanner**
-- [ ] `LibraryView` (Skeleton): Liste aller Produkte via `@Query`, nach Name sortiert
-- [ ] Git-Repository initialisieren, ersten Commit erstellen
+- [x] Xcode-Projekt erstellen (SwiftUI Lifecycle, iOS 18.0, Bundle ID setzen)
+- [x] `Secrets.xcconfig` anlegen und in `.gitignore` eintragen
+- [x] SwiftData `ModelContainer` konfigurieren (`Product`, `DiaryEntry`)
+- [x] `DataSeeder` implementieren — lädt JSON bei erstem App-Start in SwiftData
+- [x] Tab-Bar-Scaffold: Tabs **Tagebuch**, **Bibliothek**, **Scanner**, **Statistik**
+- [x] `LibraryView`: Liste mit Favoriten + Meine Produkte, Suche, Swipe-to-Delete
+- [x] Git-Repository initialisieren, `.xcodeproj` committed (kein xcodegen auto-run)
 
 ---
 
-## Phase 2 — OCR Scanner
+## Phase 2 — OCR Scanner ✅
 
 *Ziel: Vollständiger Scan-Workflow von Foto bis gespeichertem Produkt.*
 
-- [ ] `ScannerView`: Kamera-Sheet mit `UIImagePickerController` oder `PhotosPicker`
-- [ ] `GeminiService`: HTTP-Request aufbauen (base64 JPEG + Prompt → JSON-Response)
-- [ ] Response-Parsing: `GeminiNutritionResponse` Decodable-Struct
-- [ ] Bestätigungsformular: vorausgefüllte, editierbare Felder (Name, Kcal, Protein, Fett, KH)
-- [ ] Speichern: bestätigtes Produkt als `Product` in SwiftData anlegen
-- [ ] Fehler-States implementieren:
-  - [ ] Kein Internet → Hinweis "Werte manuell eingeben"
-  - [ ] Kein Nährwerttisch erkannt → Hinweis + Retry-Button
-  - [ ] Malformed JSON → Fallback auf manuelle Eingabe
-- [ ] Bild auf max. 1024px skalieren vor dem API-Call
+- [x] `ScannerView`: 3-State-UI (Idle / Loading / Error), Kamera-Sheet
+- [x] `CameraPickerView`: `UIViewControllerRepresentable` mit `UIImagePickerController`
+- [x] `GeminiService`: Multipart HTTP-Request (JPEG base64 + Prompt → JSON)
+- [x] Response-Parsing: `NutritionScanResult` Decodable-Struct
+- [x] `ScanConfirmationView`: vorausgefülltes, editierbares Formular (Name, Kcal, Makros)
+- [x] Speichern: bestätigtes Produkt als `Product` (source: `.ocr`) in SwiftData
+- [x] Fehler-States: Netz, kein Etikett erkannt, Server-Fehler
+- [x] Bild auf max. 1024px skalieren vor dem API-Call
+- [x] Modell: `gemini-2.5-flash`
 
 ---
 
-## Phase 3 — Diary & Logging
+## Phase 3 — Diary & Logging ✅
 
 *Ziel: Vollständige Tagebuch-Funktionalität mit Tages-Totals.*
 
-- [ ] `DiaryView`: Datum-Navigation (Heute / Vor/Zurück-Pfeile)
-- [ ] Vier Mahlzeit-Sektionen: Frühstück, Mittag, Abend, Snacks
-- [ ] "Eintrag hinzufügen"-Sheet: Produkt-Suche + Gramm/Stück-Eingabe
-- [ ] `PortionCalculatorView`: Live-Vorschau von Kcal/Makros beim Tippen
-- [ ] `DiaryEntry` in SwiftData speichern (Kcal/Makros bei Save-Zeit berechnen)
-- [ ] Tages-Zusammenfassung (oben oder unten): Gesamt-Kcal, Protein, Fett, KH
-- [ ] Swipe-to-Delete auf Tagebuch-Einträgen
+- [x] `DiaryView`: Datum-Navigation (Heute / Vor/Zurück-Pfeile) — DateNavigator ausserhalb der List
+- [x] Vier Mahlzeit-Sektionen: Frühstück, Mittag, Abend, Snacks
+- [x] Mehrere Einträge pro Mahlzeit-Slot möglich
+- [x] `AddEntryView`: Zwei-Phasen-UX (Produkt wählen → Gramm eingeben mit Autofokus)
+- [x] Live-Vorschau der Nährwerte beim Gramm-Eingeben
+- [x] `DiaryEntry` in SwiftData speichern (Kcal/Makros bei Save-Zeit denormalisiert)
+- [x] Tages-Zusammenfassung oben: Gesamt-Kcal als KcalSummaryCard
+- [x] Swipe-to-Delete auf Tagebuch-Einträgen
 
 ---
 
-## Phase 4 — Library & BLV API
+## Phase 4 — Produktbibliothek & Nährwertdatenbank ✅
 
 *Ziel: Vollständige Produktverwaltung + Schweizer Nährwertdatenbank.*
 
-- [ ] Produkt-Suche in `LibraryView` mit Live-Filterung (`@Query` + `#Predicate`)
-- [ ] `ProductDetailView`: Produkt-Werte editieren
-- [ ] Produkt löschen (mit Bestätigungs-Dialog; Warnung wenn Tagebuch-Einträge vorhanden)
-- [ ] `BLVApiService`: Suche auf naehrwertdaten.ch nach Produktname
-- [ ] Import-Flow: BLV-Suchergebnis in persönliche Bibliothek übernehmen
-- [ ] Source-Badge auf Produktkarte: OCR / BLV / Vorgeladen / Manuell
+- [x] BLV-Datenbank als Bundle: `BLVFoods.json` (1190 generische Lebensmittel, naehrwertdaten.ch v7.0)
+- [x] `DataSeeder` lädt BLV-Daten beim ersten Start, löscht alte 30er-Liste
+- [x] `AddEntryView` Produktsuche: Favoriten / Meine Produkte / Datenbank (erscheint nur beim Suchen)
+- [x] Favoriten-System: Stern-Button auf jedem Produkt, persistent in SwiftData
+- [x] Source-Badge: Gescannt (blau) / Manuell (lila) in Produkt-Zeilen
+- [x] `LibraryView`: Favoriten-Section + Meine Produkte-Section mit Swipe-to-Delete
+- [x] BLV-Produkte nicht löschbar (nur via erneutes Seeden wiederherstellbar)
+- [ ] `ProductDetailView`: Produkt-Werte nachträglich editieren
 - [ ] Manueller Produkt-Eintrag ohne Scan (Formular direkt ausfüllen)
 
 ---
 
-## Phase 5 — UX Polish
+## Phase 5 — Statistik & UX Polish ✅ (teilweise)
 
 *Ziel: App fühlt sich fertig und angenehm an.*
 
-- [ ] App Icon und Launch Screen
-- [ ] Haptisches Feedback bei Speicher-Aktionen (`UIImpactFeedbackGenerator`)
-- [ ] Empty States: Illustrationen/Texte für leeres Tagebuch und leere Bibliothek
+- [x] App Icon: `App_Icon_Draft.icon` via Xcode Icon Composer, gesetzt in General → App Icons
+- [x] `StatsView` (4. Tab): Makro-Donut-Chart (Protein/KH/Fett/Ballaststoffe) mit DateNavigator
+- [ ] Haptisches Feedback bei Speicher-Aktionen
 - [ ] Keyboard-Avoidance in allen Formularen
-- [ ] Accessibility Labels für alle interaktiven Elemente
-- [ ] Lokalisierung: Primärsprache Deutsch (Schweiz `de_CH`), sekundär Englisch
+- [ ] Accessibility Labels
 - [ ] Testen unter verschiedenen Lichtbedingungen (Kamera-Performance)
 
 ---
@@ -87,10 +87,11 @@
 *Kein festes Datum — nice-to-have nach MVP-Abschluss.*
 
 - [ ] **Apple Health Integration** — Nährstoffdaten in HealthKit schreiben
-- [ ] **Home Screen Widget** — Tagesbilanz (Kcal verbraucht / Ziel) auf dem Homescreen
-- [ ] **iCloud Backup** — CloudKit-Sync mit SwiftData für Gerätewechsel
-- [ ] **Barcode-Scanner** — Alternativer Input via EAN-Code (Open Food Facts API)
+- [ ] **Home Screen Widget** — Tagesbilanz auf dem Homescreen
+- [ ] **iCloud Backup** — CloudKit-Sync mit SwiftData
+- [ ] **Barcode-Scanner** — EAN-Code via AVFoundation → Open Food Facts API
 - [ ] **Ziel-Kalorien** — Tages-Kalorienziel setzen und Fortschrittsanzeige
+- [ ] **ProductDetailView** — Produkt-Werte nachträglich editieren
 
 ---
 
@@ -98,7 +99,8 @@
 
 | Risiko | Massnahme |
 |---|---|
-| Gemini Preview-Endpoint kann sich ändern | Endpoint-URL als Konstante in `GeminiService` — bei Modell-Updates einmalig anpassen |
-| naehrwertdaten.ch ohne SLA | Nur als Best-Effort behandeln; App funktioniert vollständig ohne diese API |
-| SwiftData-Schema-Änderungen nach Phase 1 | Vor jeder Breaking Change `VersionedSchema` + `SchemaMigrationPlan` definieren |
-| Sideloading-Zertifikat läuft nach 7 Tagen ab | Alle 7 Tage via Xcode neu deployen (kostenlose Apple ID) |
+| Gemini-Modellname kann sich ändern | `static let modelName` Konstante in `GeminiService` |
+| SwiftData `#Predicate` unterstützt keine Enum-Vergleiche | In-Memory-Filterung mit `filter { $0.source == .preloaded }` |
+| SwiftData Lightweight Migration bei neuen Feldern | Default-Wert direkt auf Property-Deklaration (nicht nur in `init`) |
+| Sideloading-Zertifikat läuft nach 7 Tagen ab | Alle 7 Tage via Xcode neu deployen |
+| `project.pbxproj` direkt editieren überschreibt Icon-Referenz | Nach jeder pbxproj-Änderung `grep App_Icon_Draft` prüfen, sofort committen |

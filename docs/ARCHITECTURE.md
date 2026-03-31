@@ -2,88 +2,99 @@
 
 ## Übersicht
 
-Kcal-Kun ist eine Single-Target iOS App ohne externe Dependencies (kein SPM, kein CocoaPods im MVP). Das Architekturmuster ist **MVVM**:
-
-- **Views** enthalten ausschliesslich Layout-Code
-- **ViewModels** (`@Observable`) besitzen State und Business Logic
-- **SwiftData Models** sind die Single Source of Truth für alle persistenten Daten
-- **Services** kapseln externe API-Calls (Gemini, BLV)
+Kcal-Kun ist eine Single-Target iOS App ohne externe Dependencies. Das Architekturmuster ist **MVVM-light**: einfache Views nutzen `@Query` direkt, komplexere Views (Scanner) haben ein eigenes `@Observable` ViewModel.
 
 ---
 
 ## Layer-Diagramm
 
 ```
-┌─────────────────────────────────────────────────┐
-│                    UI Layer                      │
-│  DiaryView  ScannerView  LibraryView  DetailView │
-└────────────────────┬────────────────────────────┘
-                     │ @Observable ViewModels
-┌────────────────────▼────────────────────────────┐
-│                ViewModel Layer                   │
-│  DiaryViewModel  ScannerViewModel  LibraryVM     │
-└──────┬─────────────────────┬────────────────────┘
-       │ SwiftData @Query     │ async/await
-┌──────▼──────┐   ┌──────────▼──────────────────┐
-│  SwiftData  │   │         Service Layer         │
-│  (on-device)│   │  GeminiService  BLVApiService │
-│  Product    │   │  DataSeeder                   │
-│  DiaryEntry │   └──────────┬────────────────────┘
-└─────────────┘              │ HTTPS
-                   ┌─────────▼────────────────────┐
-                   │       External APIs           │
-                   │  Gemini API  naehrwertdaten.ch│
-                   └──────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                        UI Layer                          │
+│  DiaryView  LibraryView  ScannerView  StatsView          │
+│  AddEntryView  ScanConfirmationView  CameraPickerView    │
+└────────────────────────┬────────────────────────────────┘
+                         │ @Observable ViewModel (nur Scanner)
+┌────────────────────────▼────────────────────────────────┐
+│                   ViewModel Layer                        │
+│  ScannerViewModel  (DiaryView/LibraryView: @Query direkt)│
+└──────┬──────────────────────┬───────────────────────────┘
+       │ SwiftData @Query      │ async/await
+┌──────▼──────┐   ┌───────────▼─────────────────────────┐
+│  SwiftData  │   │           Service Layer               │
+│  (on-device)│   │  GeminiService   DataSeeder           │
+│  Product    │   └──────────┬──────────────────────────┘
+│  DiaryEntry │              │ HTTPS (nur Gemini)
+└─────────────┘   ┌──────────▼──────────────────────────┐
+                  │         External APIs                 │
+                  │  Gemini API (gemini-2.5-flash)        │
+                  └─────────────────────────────────────┘
+```
+
+*BLV-Daten sind als `BLVFoods.json` gebundelt — kein Live-API-Call nötig.*
+
+---
+
+## Dateistruktur
+
+```
+Kcal-Kun/
+├── KcalKunApp.swift          ← ModelContainer + DataSeeder.seedIfNeeded
+├── MainTabView.swift         ← 4 Tabs: Tagebuch / Bibliothek / Scanner / Statistik
+├── Models/
+│   ├── Product.swift         ← @Model, isFavorite, source, Nährwerte per 100g
+│   ├── DiaryEntry.swift      ← @Model, denormalisierte Nährwerte inkl. fiber
+│   ├── MealSlot.swift        ← Enum: Frühstück / Mittag / Abend / Snacks
+│   └── ProductSource.swift   ← Enum: ocr / blvApi / preloaded / manual
+├── Views/
+│   ├── DiaryView.swift       ← DateNavigator (ausserhalb List) + 4 MealSlot-Sections
+│   ├── LibraryView.swift     ← Favoriten + Meine Produkte, Swipe-to-Delete
+│   ├── StatsView.swift       ← Makro-Donut-Chart (SectorMark), DateNavigator
+│   └── Components/
+│       ├── AddEntryView.swift       ← 2-Phasen: Produktwahl → Gramm (autofokus)
+│       ├── CameraPickerView.swift   ← UIViewControllerRepresentable
+│       └── ScanConfirmationView.swift
+├── ViewModels/
+│   └── ScannerViewModel.swift  ← @Observable @MainActor
+├── Services/
+│   ├── GeminiService.swift   ← JPEG → Gemini REST → NutritionScanResult
+│   └── DataSeeder.swift      ← BLVFoods.json → SwiftData (key: hasSeededBLVv7)
+└── Resources/
+    ├── BLVFoods.json         ← 1190 generische CH-Lebensmittel (BLV v7.0)
+    └── Assets.xcassets/
 ```
 
 ---
 
-## Module-Aufbau
+## Wichtige Design-Entscheidungen
 
-### Views/
+### DateNavigator muss ausserhalb von List stehen
+List-Rows fangen Gesten ab — Buttons in List-Rows funktionieren nicht zuverlässig. `DateNavigator` immer in einem `VStack` **über** der `List` platzieren.
 
-| Datei | Beschreibung |
-|---|---|
-| `DiaryView.swift` | Tages-Tagebuch, nach Mahlzeit-Slots gruppiert, Datum-Navigation |
-| `ScannerView.swift` | Kamera-Sheet, Lade-Zustand während Gemini-Call, Bestätigungsformular |
-| `LibraryView.swift` | Durchsuchbare Liste aller gespeicherten Produkte |
-| `ProductDetailView.swift` | Editierbarer Produkt-Steckbrief mit Source-Badge |
-| `PortionCalculatorView.swift` | Eingebettet in Add-Entry-Sheet: Live-Vorschau der Nährwerte |
-| `Components/` | Wiederverwendbare UI-Elemente (MacroSummaryRow, MealSlotHeader, …) |
+### SwiftData #Predicate und Enums
+`#Predicate` unterstützt weder `$0.source == .preloaded` noch `$0.source.rawValue == "preloaded"`. Enum-Filterung immer nach dem Fetch in-memory (`filter { $0.source == .preloaded }`).
 
-### ViewModels/
+### BLV-Datenbank als Bundle statt Live-API
+Die naehrwertdaten.ch-Datenbank enthält generische Lebensmittel (kein Markenprodukte). Als gebündeltes JSON geladen statt Live-API — konsistent mit Offline-First-Philosophie.
 
-| Datei | Verantwortlichkeit |
-|---|---|
-| `DiaryViewModel.swift` | Datums-Navigation, Mahlzeit-Gruppierung, Tages-Totals |
-| `ScannerViewModel.swift` | Orchestriert: Foto-Capture → Gemini-Call → Parsed Result → User Confirmation |
-| `LibraryViewModel.swift` | Live-Filterung der `@Query`-Resultate nach Suchbegriff |
-
-### Services/
-
-| Datei | Verantwortlichkeit |
-|---|---|
-| `GeminiService.swift` | Nimmt `UIImage`, sendet Multipart-Request an Gemini, gibt `NutritionLabel` zurück |
-| `BLVApiService.swift` | Sucht Produkte auf naehrwertdaten.ch, gibt `[NutritionLabel]` zurück |
-| `DataSeeder.swift` | Lädt `PreloadedFoods.json` beim ersten App-Start in SwiftData |
-
-### Models/ (SwiftData)
-
-Vollständige Schema-Dokumentation: [DATA_MODEL.md](DATA_MODEL.md)
+### isFavorite Lightweight Migration
+Neue Bool-Properties in SwiftData brauchen den Default-Wert **auf der Property-Deklaration** (`var isFavorite: Bool = false`), nicht nur im `init`.
 
 ---
 
-## Datenfluss: Neues Produkt scannen
+## Datenfluss: Produkt scannen
 
 ```
-1. Nutzer tippt Kamera-Button in ScannerView
-2. ScannerViewModel.capturePhoto() → UIImage
-3. GeminiService.extractNutrition(from: image) → async
-4. Gemini antwortet mit JSON → NutritionLabel struct
-5. ScannerView zeigt vorausgefülltes Bestätigungsformular
-6. Nutzer gibt Produktnamen ein, korrigiert ggf. Werte
-7. ScannerViewModel.saveProduct() → Product in SwiftData
-8. LibraryView aktualisiert sich automatisch via @Query
+1. ScannerView → Kamera-Button → CameraPickerView (UIImagePickerController)
+2. ScannerViewModel.processImage(UIImage)
+   → skalieren auf max. 1024px
+   → JPEG-Data erstellen
+3. GeminiService.extractNutrition(from: jpegData) async throws
+   → POST generativelanguage.googleapis.com (multipart)
+   → JSON parsen → NutritionScanResult
+4. ScannerView zeigt ScanConfirmationView (Sheet)
+5. Nutzer bestätigt → ScanConfirmationView erstellt Product (source: .ocr)
+6. modelContext.insert(product) → LibraryView aktualisiert via @Query
 ```
 
 ---
@@ -91,24 +102,25 @@ Vollständige Schema-Dokumentation: [DATA_MODEL.md](DATA_MODEL.md)
 ## Datenfluss: Tagebuch-Eintrag hinzufügen
 
 ```
-1. Nutzer öffnet DiaryView → aktueller Tag
-2. Tippt "+ Hinzufügen" in einem Mahlzeit-Slot
-3. Add-Entry-Sheet öffnet sich
-4. LibraryViewModel filtert Produkte live nach Tipp-Eingabe
-5. Nutzer wählt Produkt, gibt Gramm oder Stückzahl ein
-6. PortionCalculatorView zeigt Live-Vorschau: kcal = (kcalPer100g / 100) × grams
-7. DiaryViewModel.addEntry() → DiaryEntry in SwiftData gespeichert
-8. Tages-Totals werden neu berechnet und angezeigt
+1. DiaryView → "+" Button im MealSlot → AddEntryView (Sheet)
+2. Phase 1: Produktsuche
+   - Favoriten (isFavorite == true)
+   - Meine Produkte (source: .ocr oder .manual)
+   - Datenbank (source: .preloaded) — nur sichtbar wenn Suchtext vorhanden
+3. Phase 2: Gramm eingeben (autofokus, decimalPad)
+   - Live-Vorschau: kcal/P/F/KH für eingegebene Menge
+4. "Hinzufügen" → DiaryEntry(product, grams) → modelContext.insert
+   → Nährwerte denormalisiert berechnet und gespeichert
 ```
 
 ---
 
 ## Offline-Architektur
 
-- Alle Daten leben lokal in SwiftData — kein Cloud-Sync, kein Backend
-- **Gemini API** ist die einzige Netzwerk-Abhängigkeit
-- Bei fehlendem Netz zeigt die App: *"Kein Internet. Werte manuell eingeben."* — Scanner funktioniert weiterhin mit manuellem Formular
-- **BLV API** ist optionale Ergänzung; fehlt sie, ändert sich nichts am Kern-Workflow
+- Alle Daten lokal in SwiftData — kein Cloud-Sync, kein Backend
+- **Einzige Netzwerkabhängigkeit:** Gemini API (OCR-Scan)
+- BLV-Lebensmitteldatenbank ist vollständig offline im App-Bundle
+- Bei fehlendem Netz: Scanner zeigt Fehler-State mit "Manuell eingeben"-Option
 
 ---
 
@@ -116,7 +128,6 @@ Vollständige Schema-Dokumentation: [DATA_MODEL.md](DATA_MODEL.md)
 
 | Aspekt | Massnahme |
 |---|---|
-| API-Key | Build-Zeit-Injection via `Secrets.xcconfig`, nie hardcoded, nie im Repo |
-| Nutzer-Daten | Kein Account, keine Cloud-Sync, keine Telemetrie |
-| Netzwerk | Einzige ausgehende Daten: Foto der Lebensmittelverpackung an Gemini (kein persönlicher Bezug) |
-| Lokaler Speicher | SwiftData-Datenbank liegt im App-Container, nicht zugänglich für andere Apps |
+| API-Key | `Secrets.xcconfig` (gitignored), Build-Zeit-Injection via `$(GEMINI_API_KEY)` |
+| Nutzerdaten | Kein Account, keine Cloud, keine Telemetrie |
+| Netzwerk | Nur Foto der Lebensmittelverpackung geht an Gemini — kein persönlicher Bezug |
