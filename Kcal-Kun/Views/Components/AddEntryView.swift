@@ -14,6 +14,7 @@ struct AddEntryView: View {
     @State private var searchText = ""
     @State private var gramsText = ""
     @State private var selectedSlot: MealSlot
+    @State private var showManualEntry = false
     @FocusState private var gramsFocused: Bool
 
     init(selectedDate: Date, initialSlot: MealSlot) {
@@ -112,6 +113,14 @@ struct AddEntryView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Abbrechen") { dismiss() }
             }
+            ToolbarItem(placement: .primaryAction) {
+                Button { showManualEntry = true } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showManualEntry) {
+            ManualProductEntryView()
         }
     }
 

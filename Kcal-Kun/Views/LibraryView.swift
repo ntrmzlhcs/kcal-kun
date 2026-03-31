@@ -6,6 +6,7 @@ struct LibraryView: View {
     @Query(sort: \Product.name) private var allProducts: [Product]
 
     @State private var searchText = ""
+    @State private var showManualEntry = false
 
     private var favorites: [Product] {
         let base = allProducts.filter { $0.isFavorite }
@@ -61,6 +62,16 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle("Bibliothek")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showManualEntry = true } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showManualEntry) {
+                ManualProductEntryView()
+            }
         }
     }
 
