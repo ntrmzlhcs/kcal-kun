@@ -18,8 +18,9 @@ struct DataSeeder {
 
     private static func reseedBLV(context: ModelContext) throws {
         // Bestehende Preloaded-Einträge löschen (alte 30er-Liste)
+        let preloadedRaw = ProductSource.preloaded.rawValue
         let existing = try context.fetch(FetchDescriptor<Product>(
-            predicate: #Predicate { $0.source == ProductSource.preloaded }
+            predicate: #Predicate { $0.source.rawValue == preloadedRaw }
         ))
         for product in existing {
             context.delete(product)
