@@ -12,48 +12,48 @@
 		377B5C2A70F5602D660953EF /* DiaryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595607E4A30ED2BA925C068E /* DiaryEntry.swift */; };
 		4737277438E3A15E8E28A487 /* ScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2D0DE8B14125B56D0D065A /* ScannerView.swift */; };
 		5BD56A3B2F7B9BAD002C59D4 /* App_Icon_Draft.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5BD56A3A2F7B9BAD002C59D4 /* App_Icon_Draft.icon */; };
-		6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B290406F36C8A8745A392294 /* StatsView.swift */; };
-		8942DF7FECFA3AA8E201E0F9 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6672F87448E0513470FD6F /* MainTabView.swift */; };
 		67FCDE9C10B74B8AB1B37C96 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1B69DE86244BBC88FDFB66 /* ProfileView.swift */; };
+		6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B290406F36C8A8745A392294 /* StatsView.swift */; };
+		7009D487EBA549A3A0411A2A /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9768C332524C50A6436480 /* HealthKitService.swift */; };
+		78BA43AD31CC435B878E7E73 /* KcalProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9CF46334E244489606E48F /* KcalProgressView.swift */; };
+		8942DF7FECFA3AA8E201E0F9 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6672F87448E0513470FD6F /* MainTabView.swift */; };
 		911FF8DADE0E8BD2310F0DC5 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D46DE566AE2DDEC54645227 /* LibraryView.swift */; };
 		955C59BFDEA8C801C920819F /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D3DF9F474D59E56F7FF7FB /* GeminiService.swift */; };
-		7009D487EBA549A3A0411A2A /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9768C332524C50A6436480 /* HealthKitService.swift */; };
 		97D3B417A1EBC9DC860B88E7 /* DataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A170846B94D539D35D4A200 /* DataSeeder.swift */; };
 		A646721F222785D399D38350 /* CameraPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70568DE967124998EBF126B /* CameraPickerView.swift */; };
 		AED612A427A92D4620AF451F /* ScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */; };
 		B500BCDF23564B05882482C5 /* BLVFoods.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BA0BC210EE545E484BC475F /* BLVFoods.json */; };
-		CDBDD8F4D7D12C1778637450 /* ProductSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BD64646A6A591F52455AA4 /* ProductSource.swift */; };
-		78BA43AD31CC435B878E7E73 /* KcalProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9CF46334E244489606E48F /* KcalProgressView.swift */; };
-		EDBA34CDE6CD6AA72FB81B54 /* AddEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83923A87406A6E661B0C9A45 /* AddEntryView.swift */; };
 		CCA204949C5F482AA6BE6C82 /* ManualProductEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FA4D891D644D3B9B9DBD3F /* ManualProductEntryView.swift */; };
+		CDBDD8F4D7D12C1778637450 /* ProductSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BD64646A6A591F52455AA4 /* ProductSource.swift */; };
+		D029C134FB694E68B52B30EC /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B0FFAF571247E7B4FD4965 /* UserProfile.swift */; };
+		EDBA34CDE6CD6AA72FB81B54 /* AddEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83923A87406A6E661B0C9A45 /* AddEntryView.swift */; };
 		F61AE35088B1D34E48A8C7CC /* ScanConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */; };
 		F6A9CB2A74B38F4E94D088F9 /* KcalKunApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */; };
 		F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */; };
-		D029C134FB694E68B52B30EC /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B0FFAF571247E7B4FD4965 /* UserProfile.swift */; };
 		FBE064D05FADB5933DB36ABA /* Product.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA34AC6D29608E2EEC481963 /* Product.swift */; };
 		FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */ = {isa = PBXBuildFile; fileRef = 64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanConfirmationView.swift; sourceTree = "<group>"; };
+		1D1B69DE86244BBC88FDFB66 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		29153459687B1CD24A67832E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3170E0C4CB4236B485C68809 /* DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryView.swift; sourceTree = "<group>"; };
 		36AF2FF5C88242D96FD58F6A /* AI_INTEGRATION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI_INTEGRATION.md; sourceTree = "<group>"; };
+		47FA4D891D644D3B9B9DBD3F /* ManualProductEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualProductEntryView.swift; sourceTree = "<group>"; };
 		4AD9493B7D7BA8640E3F0E31 /* ROADMAP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ROADMAP.md; sourceTree = "<group>"; };
 		564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		595607E4A30ED2BA925C068E /* DiaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEntry.swift; sourceTree = "<group>"; };
+		5B3BA49A2F7C346600C9EA96 /* Kcal-Kun.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Kcal-Kun.entitlements"; sourceTree = "<group>"; };
 		5BD56A3A2F7B9BAD002C59D4 /* App_Icon_Draft.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = App_Icon_Draft.icon; sourceTree = "<group>"; };
 		6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunApp.swift; sourceTree = "<group>"; };
 		64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreloadedFoods.json; sourceTree = "<group>"; };
 		64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
-		DE9768C332524C50A6436480 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		6A170846B94D539D35D4A200 /* DataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSeeder.swift; sourceTree = "<group>"; };
 		6BA0BC210EE545E484BC475F /* BLVFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = BLVFoods.json; sourceTree = "<group>"; };
+		80B0FFAF571247E7B4FD4965 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		82BF815B21651C3BCA0BF6CE /* MealSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealSlot.swift; sourceTree = "<group>"; };
-		FA9CF46334E244489606E48F /* KcalProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalProgressView.swift; sourceTree = "<group>"; };
 		83923A87406A6E661B0C9A45 /* AddEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEntryView.swift; sourceTree = "<group>"; };
-		47FA4D891D644D3B9B9DBD3F /* ManualProductEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualProductEntryView.swift; sourceTree = "<group>"; };
-		1D1B69DE86244BBC88FDFB66 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		8D46DE566AE2DDEC54645227 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		94BD64646A6A591F52455AA4 /* ProductSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductSource.swift; sourceTree = "<group>"; };
 		B290406F36C8A8745A392294 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
@@ -61,14 +61,15 @@
 		BB2E08FEC2ACC49DCC5F38D0 /* ARCHITECTURE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE.md; sourceTree = "<group>"; };
 		BBA8358560709A2BCFA86EFD /* DATA_MODEL.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DATA_MODEL.md; sourceTree = "<group>"; };
 		BF2D0DE8B14125B56D0D065A /* ScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerView.swift; sourceTree = "<group>"; };
-		80B0FFAF571247E7B4FD4965 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		CA34AC6D29608E2EEC481963 /* Product.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Product.swift; sourceTree = "<group>"; };
 		D3F4D64FF281A1A6324FF0C1 /* Kcal-Kun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Kcal-Kun.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D5D3DF9F474D59E56F7FF7FB /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
+		DE9768C332524C50A6436480 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerViewModel.swift; sourceTree = "<group>"; };
 		E70568DE967124998EBF126B /* CameraPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPickerView.swift; sourceTree = "<group>"; };
 		E73498C8E756F40E77C0ACB7 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 		EA6672F87448E0513470FD6F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		FA9CF46334E244489606E48F /* KcalProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalProgressView.swift; sourceTree = "<group>"; };
 		"TEMP_26DFF50E-7913-47E3-B69C-249660C2C78E" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -170,6 +171,7 @@
 		A99C0B7B749964EE79891364 /* Kcal-Kun */ = {
 			isa = PBXGroup;
 			children = (
+				5B3BA49A2F7C346600C9EA96 /* Kcal-Kun.entitlements */,
 				29153459687B1CD24A67832E /* Info.plist */,
 				6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */,
 				EA6672F87448E0513470FD6F /* MainTabView.swift */,
@@ -313,6 +315,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				CODE_SIGN_ENTITLEMENTS = "Kcal-Kun/Kcal-Kun.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -329,6 +332,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				CODE_SIGN_ENTITLEMENTS = "Kcal-Kun/Kcal-Kun.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
