@@ -11,7 +11,7 @@
 		36144CBF0DC5FC6BAC73F45E /* DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3170E0C4CB4236B485C68809 /* DiaryView.swift */; };
 		377B5C2A70F5602D660953EF /* DiaryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595607E4A30ED2BA925C068E /* DiaryEntry.swift */; };
 		4737277438E3A15E8E28A487 /* ScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2D0DE8B14125B56D0D065A /* ScannerView.swift */; };
-		5BD56A3B2F7B9BAD002C59D4 /* App_Icon_Draft.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5BD56A3A2F7B9BAD002C59D4 /* App_Icon_Draft.icon */; };
+		5B3BA49C2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5B3BA49B2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon */; };
 		67FCDE9C10B74B8AB1B37C96 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1B69DE86244BBC88FDFB66 /* ProfileView.swift */; };
 		6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B290406F36C8A8745A392294 /* StatsView.swift */; };
 		7009D487EBA549A3A0411A2A /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9768C332524C50A6436480 /* HealthKitService.swift */; };
@@ -45,7 +45,7 @@
 		564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		595607E4A30ED2BA925C068E /* DiaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEntry.swift; sourceTree = "<group>"; };
 		5B3BA49A2F7C346600C9EA96 /* Kcal-Kun.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Kcal-Kun.entitlements"; sourceTree = "<group>"; };
-		5BD56A3A2F7B9BAD002C59D4 /* App_Icon_Draft.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = App_Icon_Draft.icon; sourceTree = "<group>"; };
+		5B3BA49B2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Kcal-Kun_Icon.icon"; sourceTree = "<group>"; };
 		6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunApp.swift; sourceTree = "<group>"; };
 		64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreloadedFoods.json; sourceTree = "<group>"; };
 		64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
@@ -187,12 +187,12 @@
 		F4E4DE53B20BADDEFFFFADD4 = {
 			isa = PBXGroup;
 			children = (
-				5BD56A3A2F7B9BAD002C59D4 /* App_Icon_Draft.icon */,
 				64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */,
 				417A38058FF7801ACA4CDF06 /* docs */,
 				A99C0B7B749964EE79891364 /* Kcal-Kun */,
 				574DFF1EC8173AC58CF94F70 /* Products */,
 				5B1D259A2F7B11D8001030F3 /* Recovered References */,
+				5B3BA49B2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -257,8 +257,8 @@
 			files = (
 				F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */,
 				FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */,
+				5B3BA49C2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon in Resources */,
 				B500BCDF23564B05882482C5 /* BLVFoods.json in Resources */,
-				5BD56A3B2F7B9BAD002C59D4 /* App_Icon_Draft.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,7 +314,7 @@
 		4535A2E45BD0B54C7F0D3F96 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Kcal-Kun_Icon";
 				CODE_SIGN_ENTITLEMENTS = "Kcal-Kun/Kcal-Kun.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -331,7 +331,7 @@
 		58D99F822A4580916DC72F95 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = App_Icon_Draft;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Kcal-Kun_Icon";
 				CODE_SIGN_ENTITLEMENTS = "Kcal-Kun/Kcal-Kun.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;

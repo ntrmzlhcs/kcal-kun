@@ -13,6 +13,7 @@ struct AddEntryView: View {
     @State private var selectedProduct: Product? = nil
     @State private var searchText = ""
     @State private var gramsText = ""
+    @State private var useMl = false
     @State private var selectedSlot: MealSlot
     @State private var showManualEntry = false
     @FocusState private var gramsFocused: Bool
@@ -181,11 +182,15 @@ struct AddEntryView: View {
 
             Section("Menge") {
                 HStack {
-                    TextField("Gramm", text: $gramsText)
+                    TextField(useMl ? "Milliliter" : "Gramm", text: $gramsText)
                         .keyboardType(.decimalPad)
                         .focused($gramsFocused)
-                    Text("g")
-                        .foregroundStyle(.secondary)
+                    Picker("Einheit", selection: $useMl) {
+                        Text("g").tag(false)
+                        Text("ml").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 80)
                 }
                 if let g = grams, g > 0 {
                     let f = g / 100.0
@@ -222,7 +227,7 @@ struct AddEntryView: View {
 
     private func addEntry() {
         guard let product = selectedProduct, let g = grams, g > 0 else { return }
-        let entry = DiaryEntry(date: selectedDate, mealSlot: selectedSlot, product: product, grams: g)
+        let entry = DiaryEntry(date: selectedDate, mealSlot: selectedSlot, product: product, grams: g, unit: useMl ? "ml" : "g")
         modelContext.insert(entry)
         try? modelContext.save()
         dismiss()

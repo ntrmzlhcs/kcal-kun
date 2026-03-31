@@ -5,39 +5,41 @@ struct KcalProgressView: View {
     let profile: UserProfile
     let workoutKcal: Double
 
+    // Effektives Ziel = gesetztes Ziel + verdiente Bewegungskalorien
+    private var effectiveTarget: Double { profile.targetKcal + workoutKcal }
+    // Erhaltungsbedarf = Grundumsatz + Bewegungskalorien (Rot-Schwelle)
     private var budget: Double { profile.bmr + workoutKcal }
-    private var target: Double { profile.targetKcal }
 
     // MARK: - Farb-Logik
 
     private var barColor: Color {
         switch profile.goalType {
         case .deficit:
-            if consumed >= budget  { return .red }
-            if consumed >= target  { return .orange }
+            if consumed >= budget         { return .red }
+            if consumed >= effectiveTarget { return .orange }
             return .green
 
         case .surplus:
-            if consumed > target * 1.10 { return .red }
-            if consumed > target * 1.05 { return .orange }
-            if consumed >= target       { return .green }
-            if consumed >= budget       { return .orange }
+            if consumed > effectiveTarget * 1.10 { return .red }
+            if consumed > effectiveTarget * 1.05 { return .orange }
+            if consumed >= effectiveTarget        { return .green }
+            if consumed >= budget                 { return .orange }
             return .secondary
         }
     }
 
     private var statusLabel: String {
-        let remaining = target - consumed
+        let remaining = effectiveTarget - consumed
         switch profile.goalType {
         case .deficit:
-            if consumed >= budget  { return "Über Grundumsatz!" }
-            if consumed >= target  { return "\(Int(consumed - target)) kcal über Ziel" }
+            if consumed >= budget          { return "Über Grundumsatz!" }
+            if consumed >= effectiveTarget { return "\(Int(consumed - effectiveTarget)) kcal über Ziel" }
             return "\(Int(remaining)) kcal übrig"
 
         case .surplus:
-            if consumed > target * 1.10 { return "\(Int(consumed - target)) kcal über Ziel" }
-            if consumed > target * 1.05 { return "Leicht über Ziel" }
-            if consumed >= target       { return "Ziel erreicht 🎯" }
+            if consumed > effectiveTarget * 1.10 { return "\(Int(consumed - effectiveTarget)) kcal über Ziel" }
+            if consumed > effectiveTarget * 1.05 { return "Leicht über Ziel" }
+            if consumed >= effectiveTarget        { return "Ziel erreicht 🎯" }
             return "\(Int(remaining)) kcal bis zum Ziel"
         }
     }
@@ -52,7 +54,7 @@ struct KcalProgressView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("\(Int(consumed))")
                             .font(.system(size: 36, weight: .bold, design: .rounded))
-                        Text("/ \(Int(target)) kcal")
+                        Text("/ \(Int(effectiveTarget)) kcal")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -72,7 +74,7 @@ struct KcalProgressView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(barColor.gradient)
                         .frame(
-                            width: geo.size.width * min(consumed / max(target, 1), 1.0),
+                            width: geo.size.width * min(consumed / max(effectiveTarget, 1), 1.0),
                             height: 12
                         )
                         .animation(.spring(duration: 0.4), value: consumed)

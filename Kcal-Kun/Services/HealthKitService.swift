@@ -13,7 +13,10 @@ final class HealthKitService {
     func requestAuthorizationAndFetch() async {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         do {
-            try await store.requestAuthorization(toShare: [], read: [HKObjectType.workoutType()])
+            try await store.requestAuthorization(
+                toShare: [],
+                read: [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned)]
+            )
             isAuthorized = true
             await fetchTodayWorkoutKcal()
         } catch {
@@ -40,7 +43,7 @@ final class HealthKitService {
             store.execute(query)
         }
         let total = (workouts ?? []).reduce(0.0) {
-            $0 + ($1.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0)
+            $0 + ($1.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0)
         }
         workoutKcalToday = total * 0.9  // 10% Abschlag
     }

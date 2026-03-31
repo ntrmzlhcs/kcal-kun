@@ -1,7 +1,9 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+import Photos
 
+@MainActor
 struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +18,7 @@ struct ProfileView: View {
     @State private var photoItem: PhotosPickerItem? = nil
     @State private var photoData: Data? = nil
     @State private var loaded = false
+    @State private var photoAccessLimited = false
 
     private var profile: UserProfile? { profiles.first }
 
@@ -52,6 +55,23 @@ struct ProfileView: View {
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
+                }
+
+                if photoAccessLimited {
+                    Section {
+                        HStack {
+                            Text("Fotobibliothek-Zugriff eingeschränkt.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button("Einstellungen") {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
+                            .font(.caption)
+                        }
+                    }
                 }
 
                 Section("Körperdaten") {
@@ -112,6 +132,15 @@ struct ProfileView: View {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
                         photoData = data
                     }
+                }
+            }
+            .task {
+                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                if status == .notDetermined {
+                    let new = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+                    photoAccessLimited = (new == .limited)
+                } else {
+                    photoAccessLimited = (status == .limited)
                 }
             }
             .onAppear {

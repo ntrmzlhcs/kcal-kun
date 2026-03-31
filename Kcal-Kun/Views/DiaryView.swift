@@ -155,7 +155,7 @@ private struct DiaryEntryRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.product.name)
-                Text("\(formatGrams(entry.grams)) g")
+                Text("\(formatGrams(entry.grams)) \(entry.unit)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
