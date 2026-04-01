@@ -28,17 +28,21 @@ struct DiaryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                DateNavigator(selectedDate: $selectedDate)
-                    .padding(.horizontal)
-
                 List {
+                    // Date navigator
+                    Section {
+                        DateNavigator(selectedDate: $selectedDate)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+
                     // Kcal summary / progress
                     Section {
                         if let profile {
                             KcalProgressView(
                                 consumed: totalKcal,
                                 profile: profile,
-                                workoutKcal: healthKit.workoutKcalToday
+                                workoutKcal: healthKit.workoutKcal
                             )
                         } else {
                             KcalSummaryCard(kcal: totalKcal)
@@ -95,9 +99,7 @@ struct DiaryView: View {
                 ProfileView()
             }
             .task(id: selectedDate) {
-                if Calendar.current.isDateInToday(selectedDate) {
-                    await healthKit.fetchTodayWorkoutKcal()
-                }
+                await healthKit.fetchWorkoutKcal(for: selectedDate)
             }
         }
     }
@@ -133,7 +135,7 @@ private struct KcalSummaryCard: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Kalorien heute")
+                Text("Kalorien")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Text("\(Int(kcal)) kcal")

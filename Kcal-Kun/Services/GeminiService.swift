@@ -207,6 +207,147 @@ struct GeminiService {
         return components
     }
 
+    static func analyzeNutrition(prompt: String) async throws -> String {
+        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
+              !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        else { throw GeminiServiceError.missingApiKey }
+
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
+        guard let url = URL(string: urlString) else { throw GeminiServiceError.invalidResponse }
+        let body: [String: Any] = [
+            "contents": [["parts": [["text": prompt]]]],
+            "generationConfig": ["temperature": 0.4]
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch let urlError as URLError {
+            if urlError.code == .notConnectedToInternet || urlError.code == .networkConnectionLost {
+                throw GeminiServiceError.networkUnavailable
+            }
+            throw GeminiServiceError.invalidResponse
+        }
+
+        if let httpResponse = response as? HTTPURLResponse {
+            switch httpResponse.statusCode {
+            case 200: break
+            case 429: throw GeminiServiceError.rateLimited
+            default:  throw GeminiServiceError.serverError(httpResponse.statusCode)
+            }
+        }
+
+        struct GeminiAPIResponse: Decodable {
+            struct Candidate: Decodable {
+                struct Content: Decodable {
+                    struct Part: Decodable { let text: String }
+                    let parts: [Part]
+                }
+                let content: Content
+            }
+            let candidates: [Candidate]
+        }
+
+        guard let apiResponse = try? JSONDecoder().decode(GeminiAPIResponse.self, from: data),
+              let text = apiResponse.candidates.first?.content.parts.first?.text,
+              !text.isEmpty
+        else { throw GeminiServiceError.invalidResponse }
+
+        return text
+    }
+
+    static func buildNutritionPrompt(
+        entries: [DiaryEntry],
+        workoutKcals: [Date: Double],
+        profile: UserProfile?
+    ) -> String {
+        let cal   = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let days  = (0..<7).map { cal.date(byAdding: .day, value: -$0, to: today)! }.reversed()
+
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "de_CH")
+        fmt.dateFormat = "dd. MMMM yyyy"
+
+        var byDay: [Date: [DiaryEntry]] = [:]
+        for entry in entries {
+            byDay[cal.startOfDay(for: entry.date), default: []].append(entry)
+        }
+
+        let profileText: String
+        if let p = profile {
+            let goalLabel = p.goalType == .deficit ? "Kaloriendefizit" : "Massephase"
+            let target    = Int(p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta)
+            profileText = """
+            - Grösse: \(Int(p.heightCm)) cm, Gewicht: \(String(format: "%.1f", p.weightKg)) kg
+            - Grundumsatz (BMR): \(Int(p.bmr)) kcal
+            - Ziel: \(goalLabel), Delta: \(Int(p.kcalDelta)) kcal/Tag
+            - Effektives Tagesziel (ohne Bewegung): \(target) kcal
+            """
+        } else {
+            profileText = "(kein Profil vorhanden)"
+        }
+
+        var daysLines = ""
+        var totalKcal = 0.0, totalWorkout = 0.0
+        var daysWithEntries = 0, daysWithWorkout = 0
+
+        for day in days {
+            let dayEntries = byDay[day] ?? []
+            let workout    = workoutKcals[day] ?? 0
+            let dayKcal    = dayEntries.reduce(0) { $0 + $1.kcal }
+            let dayProtein = dayEntries.reduce(0) { $0 + $1.protein }
+            let dayCarbs   = dayEntries.reduce(0) { $0 + $1.carbs }
+            let dayFat     = dayEntries.reduce(0) { $0 + $1.fat }
+            let dayFiber   = dayEntries.reduce(0) { $0 + $1.fiber }
+
+            totalKcal    += dayKcal
+            totalWorkout += workout
+            if dayKcal   > 0 { daysWithEntries += 1 }
+            if workout   > 0 { daysWithWorkout += 1 }
+
+            daysLines += "\n\n\(fmt.string(from: day)) | Ernährung: \(Int(dayKcal)) kcal (P \(Int(dayProtein))g, K \(Int(dayCarbs))g, F \(Int(dayFat))g, B \(String(format: "%.1f", dayFiber))g) | Bewegung: \(Int(workout)) kcal"
+            if dayEntries.isEmpty {
+                daysLines += "\n  (keine Einträge)"
+            } else {
+                for entry in dayEntries {
+                    daysLines += "\n  - \(entry.product.name), \(Int(entry.grams.rounded()))g"
+                }
+            }
+        }
+
+        let avgKcal    = Int((totalKcal    / 7).rounded())
+        let avgWorkout = Int((totalWorkout / 7).rounded())
+        let from = fmt.string(from: days.first ?? today)
+        let to   = fmt.string(from: today)
+
+        return """
+        Du bist Ernährungs- und Sportwissenschaftler. Analysiere die Ernährung und Aktivität der letzten 7 Tage.
+        Stütze dich auf aktuelle wissenschaftliche Erkenntnisse, ohne Bias oder kommerzielle Interessen.
+
+        Nutzerprofil:
+        \(profileText)
+
+        Einträge \(from)–\(to):\(daysLines)
+
+        Ø Ernährungskalorien/Tag: \(avgKcal) kcal | Ø Bewegungskalorien/Tag: \(avgWorkout) kcal
+        Tage mit Einträgen: \(daysWithEntries)/7 | Tage mit Bewegung: \(daysWithWorkout)/7
+
+        Analysiere auf Deutsch in 3–5 Absätzen:
+        1. Energiebilanz (Ist vs. Ziel inkl. Bewegung, Konsistenz)
+        2. Makronährstoffqualität und -verteilung
+        3. Lebensmittelqualität (Verarbeitungsgrad, Vielfalt, Nährstoffdichte)
+        4. Bewegungsverhalten und dessen Einfluss auf die Bilanz
+        5. Konkrete, priorisierte Empfehlungen
+        Sei direkt und präzise. Keine allgemeinen Floskeln.
+        """
+    }
+
     private static func parseResponse(_ data: Data) throws -> NutritionScanResult {
         struct GeminiAPIResponse: Decodable {
             struct Candidate: Decodable {

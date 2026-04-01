@@ -50,7 +50,7 @@ struct KcalProgressView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Kalorien heute")
+                    Text("Kalorien")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
