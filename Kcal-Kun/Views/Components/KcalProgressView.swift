@@ -5,10 +5,12 @@ struct KcalProgressView: View {
     let profile: UserProfile
     let workoutKcal: Double
 
-    // Effektives Ziel = gesetztes Ziel + verdiente Bewegungskalorien
-    private var effectiveTarget: Double { profile.targetKcal + workoutKcal }
-    // Erhaltungsbedarf = Grundumsatz + Bewegungskalorien (Rot-Schwelle)
+    // Erhaltungsbedarf = Grundumsatz + Bewegungskalorien
     private var budget: Double { profile.bmr + workoutKcal }
+    // Effektives Ziel = Erhaltungsbedarf ± Delta
+    private var effectiveTarget: Double {
+        profile.goalType == .deficit ? budget - profile.kcalDelta : budget + profile.kcalDelta
+    }
 
     // MARK: - Farb-Logik
 

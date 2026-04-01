@@ -1,7 +1,39 @@
 import SwiftUI
 import SwiftData
-import PhotosUI
-import Photos
+
+private struct ImagePickerWithCrop: UIViewControllerRepresentable {
+    let onPick: (Data) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .photoLibrary
+        picker.allowsEditing = true
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePickerWithCrop
+        init(_ parent: ImagePickerWithCrop) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            let image = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage
+            if let jpeg = image?.jpegData(compressionQuality: 0.8) {
+                parent.onPick(jpeg)
+            }
+            picker.dismiss(animated: true)
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)
+        }
+    }
+}
 
 @MainActor
 struct ProfileView: View {
@@ -13,12 +45,11 @@ struct ProfileView: View {
     @State private var heightText = ""
     @State private var weightText = ""
     @State private var bmrText = ""
-    @State private var targetKcalText = ""
+    @State private var kcalDeltaText = ""
     @State private var goalType: GoalType = .deficit
-    @State private var photoItem: PhotosPickerItem? = nil
     @State private var photoData: Data? = nil
     @State private var loaded = false
-    @State private var photoAccessLimited = false
+    @State private var showImagePicker = false
 
     private var profile: UserProfile? { profiles.first }
 
@@ -26,7 +57,7 @@ struct ProfileView: View {
         parseDouble(heightText) != nil &&
         parseDouble(weightText) != nil &&
         parseDouble(bmrText) != nil &&
-        parseDouble(targetKcalText) != nil
+        parseDouble(kcalDeltaText) != nil
     }
 
     var body: some View {
@@ -36,7 +67,7 @@ struct ProfileView: View {
                 Section {
                     HStack {
                         Spacer()
-                        PhotosPicker(selection: $photoItem, matching: .images) {
+                        Button { showImagePicker = true } label: {
                             Group {
                                 if let data = photoData, let uiImage = UIImage(data: data) {
                                     Image(uiImage: uiImage)
@@ -55,23 +86,6 @@ struct ProfileView: View {
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
-                }
-
-                if photoAccessLimited {
-                    Section {
-                        HStack {
-                            Text("Fotobibliothek-Zugriff eingeschränkt.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Button("Einstellungen") {
-                                if let url = URL(string: UIApplication.openSettingsURLString) {
-                                    UIApplication.shared.open(url)
-                                }
-                            }
-                            .font(.caption)
-                        }
-                    }
                 }
 
                 Section("Körperdaten") {
@@ -102,17 +116,26 @@ struct ProfileView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                     }
+                    Picker("Ziel", selection: $goalType) {
+                        Text("Kaloriendefizit").tag(GoalType.deficit)
+                        Text("Massephase").tag(GoalType.surplus)
+                    }
                     HStack {
-                        Text("Zielkalorien / Tag")
+                        Text(goalType == .deficit ? "Defizit" : "Überschuss")
                         Spacer()
-                        TextField("kcal", text: $targetKcalText)
+                        TextField("kcal", text: $kcalDeltaText)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                     }
-                    Picker("Ziel", selection: $goalType) {
-                        Text("Kaloriendefizit").tag(GoalType.deficit)
-                        Text("Massephase").tag(GoalType.surplus)
+                    HStack {
+                        Text("Tagesziel")
+                        Spacer()
+                        if let bmr = parseDouble(bmrText), let delta = parseDouble(kcalDeltaText) {
+                            let target = goalType == .deficit ? bmr - delta : bmr + delta
+                            Text("\(Int(target)) kcal")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
             }
@@ -127,29 +150,19 @@ struct ProfileView: View {
                         .disabled(!canSave)
                 }
             }
-            .onChange(of: photoItem) { _, newItem in
-                Task { @MainActor in
-                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        photoData = data
-                    }
+            .fullScreenCover(isPresented: $showImagePicker) {
+                ImagePickerWithCrop { data in
+                    photoData = data
                 }
-            }
-            .task {
-                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-                if status == .notDetermined {
-                    let new = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
-                    photoAccessLimited = (new == .limited)
-                } else {
-                    photoAccessLimited = (status == .limited)
-                }
+                .ignoresSafeArea()
             }
             .onAppear {
                 guard !loaded, let p = profile else { loaded = true; return }
-                heightText     = formatDouble(p.heightCm)
-                weightText     = formatDouble(p.weightKg)
-                bmrText        = formatDouble(p.bmr)
-                targetKcalText = formatDouble(p.targetKcal)
-                goalType       = p.goalType
+                heightText    = formatDouble(p.heightCm)
+                weightText    = formatDouble(p.weightKg)
+                bmrText       = formatDouble(p.bmr)
+                kcalDeltaText = formatDouble(p.kcalDelta)
+                goalType      = p.goalType
                 photoData      = p.photoData
                 loaded         = true
             }
@@ -160,19 +173,19 @@ struct ProfileView: View {
         guard let h = parseDouble(heightText),
               let w = parseDouble(weightText),
               let b = parseDouble(bmrText),
-              let t = parseDouble(targetKcalText) else { return }
+              let d = parseDouble(kcalDeltaText) else { return }
 
         let p = profile ?? {
             let newProfile = UserProfile()
             modelContext.insert(newProfile)
             return newProfile
         }()
-        p.heightCm    = h
-        p.weightKg    = w
-        p.bmr         = b
-        p.targetKcal  = t
-        p.goalType    = goalType
-        p.photoData   = photoData
+        p.heightCm   = h
+        p.weightKg   = w
+        p.bmr        = b
+        p.kcalDelta  = d
+        p.goalType   = goalType
+        p.photoData  = photoData
         try? modelContext.save()
         dismiss()
     }

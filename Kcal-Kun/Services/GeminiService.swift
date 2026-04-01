@@ -11,9 +11,15 @@ struct NutritionScanResult {
     var saltPer100g: Double?
 }
 
+struct MealRawComponent: Decodable {
+    let blvName: String
+    let grams: Double
+}
+
 enum GeminiServiceError: LocalizedError {
     case missingApiKey
     case noLabelDetected
+    case noMealDetected
     case networkUnavailable
     case rateLimited
     case invalidResponse
@@ -25,6 +31,8 @@ enum GeminiServiceError: LocalizedError {
             return "API-Key fehlt. Bitte Secrets.xcconfig prüfen."
         case .noLabelDetected:
             return "Kein Nährwerttisch erkannt. Foto wiederholen oder manuell eingeben."
+        case .noMealDetected:
+            return "Keine Mahlzeit erkannt. Bitte ein anderes Foto versuchen."
         case .networkUnavailable:
             return "Kein Internet. Werte manuell eingeben."
         case .rateLimited:
@@ -120,6 +128,83 @@ struct GeminiService {
         }
 
         return try parseResponse(data)
+    }
+
+    static func analyzeMeal(from jpegData: Data, blvNames: [String]) async throws -> [MealRawComponent] {
+        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
+              !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        else { throw GeminiServiceError.missingApiKey }
+
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
+        guard let url = URL(string: urlString) else { throw GeminiServiceError.invalidResponse }
+
+        let productList = blvNames.joined(separator: "\n")
+        let prompt = """
+            Analyse the food in the image. For each visible food component, find the single best \
+            matching entry from the product list below and estimate the gram amount.
+            Return ONLY a JSON array — no markdown, no explanation:
+            [{"blvName": "<exact name from list>", "grams": <number>}, ...]
+            If no food is visible, return: []
+
+            Product list:
+            \(productList)
+            """
+
+        let base64Image = jpegData.base64EncodedString()
+        let body: [String: Any] = [
+            "contents": [[
+                "parts": [
+                    ["inlineData": ["mimeType": "image/jpeg", "data": base64Image]],
+                    ["text": prompt]
+                ]
+            ]],
+            "generationConfig": ["temperature": 0, "responseMimeType": "application/json"]
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch let urlError as URLError {
+            if urlError.code == .notConnectedToInternet || urlError.code == .networkConnectionLost {
+                throw GeminiServiceError.networkUnavailable
+            }
+            throw GeminiServiceError.invalidResponse
+        }
+
+        if let httpResponse = response as? HTTPURLResponse {
+            switch httpResponse.statusCode {
+            case 200: break
+            case 429: throw GeminiServiceError.rateLimited
+            default: throw GeminiServiceError.serverError(httpResponse.statusCode)
+            }
+        }
+
+        struct GeminiAPIResponse: Decodable {
+            struct Candidate: Decodable {
+                struct Content: Decodable {
+                    struct Part: Decodable { let text: String }
+                    let parts: [Part]
+                }
+                let content: Content
+            }
+            let candidates: [Candidate]
+        }
+
+        guard let apiResponse = try? JSONDecoder().decode(GeminiAPIResponse.self, from: data),
+              let jsonText = apiResponse.candidates.first?.content.parts.first?.text,
+              let jsonData = jsonText.data(using: .utf8)
+        else { throw GeminiServiceError.invalidResponse }
+
+        guard let components = try? JSONDecoder().decode([MealRawComponent].self, from: jsonData)
+        else { throw GeminiServiceError.invalidResponse }
+
+        if components.isEmpty { throw GeminiServiceError.noMealDetected }
+        return components
     }
 
     private static func parseResponse(_ data: Data) throws -> NutritionScanResult {
