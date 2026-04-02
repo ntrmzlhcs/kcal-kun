@@ -10,6 +10,7 @@ struct DiaryView: View {
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var activeSheet: MealSlot? = nil
     @State private var showProfile = false
+    @State private var selectedEntry: DiaryEntry? = nil
 
     private var profile: UserProfile? { profiles.first }
 
@@ -58,7 +59,10 @@ struct DiaryView: View {
 
                         Section {
                             ForEach(slotEntries) { entry in
-                                DiaryEntryRow(entry: entry)
+                                Button { selectedEntry = entry } label: {
+                                    DiaryEntryRow(entry: entry)
+                                }
+                                .buttonStyle(.plain)
                             }
                             .onDelete { indexSet in
                                 deleteEntries(slotEntries, at: indexSet)
@@ -97,6 +101,9 @@ struct DiaryView: View {
             }
             .sheet(isPresented: $showProfile) {
                 ProfileView()
+            }
+            .sheet(item: $selectedEntry) { entry in
+                DiaryEntryDetailSheet(entry: entry)
             }
             .task(id: selectedDate) {
                 await healthKit.fetchWorkoutKcal(for: selectedDate)
@@ -147,6 +154,77 @@ private struct KcalSummaryCard: View {
                 .foregroundStyle(.orange.gradient)
         }
         .padding()
+    }
+}
+
+private struct DiaryEntryDetailSheet: View {
+    let entry: DiaryEntry
+    @Environment(\.dismiss) private var dismiss
+
+    private var product: Product { entry.product }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    LabeledContent("Portion") {
+                        Text("\(formatAmount(entry.grams)) \(entry.unit)")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Nährwerte (Portion)") {
+                    macroRow("Energie",         value: entry.kcal,    unit: "kcal")
+                    macroRow("Protein",         value: entry.protein, unit: "g")
+                    macroRow("Kohlenhydrate",   value: entry.carbs,   unit: "g")
+                    if let sugar = product.sugarPer100g {
+                        macroRow("  davon Zucker", value: sugar * entry.grams / 100, unit: "g")
+                    }
+                    macroRow("Fett",            value: entry.fat,     unit: "g")
+                    macroRow("Ballaststoffe",   value: entry.fiber,   unit: "g")
+                    if let salt = product.saltPer100g {
+                        macroRow("Salz",        value: salt * entry.grams / 100, unit: "g")
+                    }
+                }
+
+                Section("Pro 100 \(entry.unit)") {
+                    macroRow("Energie",         value: product.kcalPer100g,    unit: "kcal")
+                    macroRow("Protein",         value: product.proteinPer100g, unit: "g")
+                    macroRow("Kohlenhydrate",   value: product.carbsPer100g,   unit: "g")
+                    if let sugar = product.sugarPer100g {
+                        macroRow("  davon Zucker", value: sugar,               unit: "g")
+                    }
+                    macroRow("Fett",            value: product.fatPer100g,     unit: "g")
+                    if let fiber = product.fiberPer100g {
+                        macroRow("Ballaststoffe", value: fiber,                unit: "g")
+                    }
+                    if let salt = product.saltPer100g {
+                        macroRow("Salz",          value: salt,                 unit: "g")
+                    }
+                }
+            }
+            .navigationTitle(product.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Fertig") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func macroRow(_ label: String, value: Double, unit: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text("\(String(format: "%.1f", value)) \(unit)")
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+    }
+
+    private func formatAmount(_ g: Double) -> String {
+        g.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(g)) : String(format: "%.1f", g)
     }
 }
 

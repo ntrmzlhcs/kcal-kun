@@ -14,6 +14,8 @@
 		5B391E892F7D15ED00E92EFB /* MealScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B391E882F7D15ED00E92EFB /* MealScannerViewModel.swift */; };
 		5B391E8B2F7D161400E92EFB /* MealScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B391E8A2F7D161400E92EFB /* MealScanResultView.swift */; };
 		5B3BA49C2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5B3BA49B2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon */; };
+		5BAB31402F7ED4120047A624 /* DishScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAB313F2F7ED4120047A624 /* DishScannerViewModel.swift */; };
+		5BAB31422F7ED4280047A624 /* DishScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAB31412F7ED4280047A624 /* DishScanResultView.swift */; };
 		67FCDE9C10B74B8AB1B37C96 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1B69DE86244BBC88FDFB66 /* ProfileView.swift */; };
 		6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B290406F36C8A8745A392294 /* StatsView.swift */; };
 		7009D487EBA549A3A0411A2A /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9768C332524C50A6436480 /* HealthKitService.swift */; };
@@ -50,6 +52,8 @@
 		5B391E8A2F7D161400E92EFB /* MealScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealScanResultView.swift; sourceTree = "<group>"; };
 		5B3BA49A2F7C346600C9EA96 /* Kcal-Kun.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Kcal-Kun.entitlements"; sourceTree = "<group>"; };
 		5B3BA49B2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Kcal-Kun_Icon.icon"; sourceTree = "<group>"; };
+		5BAB313F2F7ED4120047A624 /* DishScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DishScannerViewModel.swift"; sourceTree = "<group>"; };
+		5BAB31412F7ED4280047A624 /* DishScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DishScanResultView.swift"; sourceTree = "<group>"; };
 		6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunApp.swift; sourceTree = "<group>"; };
 		64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreloadedFoods.json; sourceTree = "<group>"; };
 		64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
@@ -81,6 +85,7 @@
 		068BA48B2C1B2113315D033B /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				5BAB31412F7ED4280047A624 /* DishScanResultView.swift */,
 				5B391E8A2F7D161400E92EFB /* MealScanResultView.swift */,
 				FA9CF46334E244489606E48F /* KcalProgressView.swift */,
 				83923A87406A6E661B0C9A45 /* AddEntryView.swift */,
@@ -168,6 +173,7 @@
 		976BAC4BBF90BBB2BF965E28 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				5BAB313F2F7ED4120047A624 /* DishScannerViewModel.swift */,
 				5B391E882F7D15ED00E92EFB /* MealScannerViewModel.swift */,
 				E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */,
 			);
@@ -287,9 +293,11 @@
 				955C59BFDEA8C801C920819F /* GeminiService.swift in Sources */,
 				F6A9CB2A74B38F4E94D088F9 /* KcalKunApp.swift in Sources */,
 				67FCDE9C10B74B8AB1B37C96 /* ProfileView.swift in Sources */,
+				5BAB31422F7ED4280047A624 /* DishScanResultView.swift in Sources */,
 				911FF8DADE0E8BD2310F0DC5 /* LibraryView.swift in Sources */,
 				8942DF7FECFA3AA8E201E0F9 /* MainTabView.swift in Sources */,
 				5B391E8B2F7D161400E92EFB /* MealScanResultView.swift in Sources */,
+				5BAB31402F7ED4120047A624 /* DishScannerViewModel.swift in Sources */,
 				027B9475748EBB9DE328F069 /* MealSlot.swift in Sources */,
 				D029C134FB694E68B52B30EC /* UserProfile.swift in Sources */,
 				FBE064D05FADB5933DB36ABA /* Product.swift in Sources */,

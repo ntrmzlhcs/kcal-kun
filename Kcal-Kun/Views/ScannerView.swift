@@ -6,7 +6,9 @@ struct ScannerView: View {
 
     @State private var vm = ScannerViewModel()
     @State private var mealVm = MealScannerViewModel()
+    @State private var dishVm = DishScannerViewModel()
     @State private var mealCapturedImage: UIImage? = nil
+    @State private var dishCapturedImage: UIImage? = nil
 
     var body: some View {
         NavigationStack {
@@ -41,17 +43,33 @@ struct ScannerView: View {
                 .sheet(isPresented: $mealVm.showResults, onDismiss: { mealVm.reset() }) {
                     MealScanResultView(vm: mealVm)
                 }
+                // --- Gericht-Analyse ---
+                .sheet(isPresented: $dishVm.showCamera) {
+                    CameraPickerView(selectedImage: $dishCapturedImage)
+                        .ignoresSafeArea()
+                        .onDisappear {
+                            if let image = dishCapturedImage {
+                                Task { await dishVm.processImage(image) }
+                                dishCapturedImage = nil
+                            }
+                        }
+                }
+                .sheet(isPresented: $dishVm.showResults, onDismiss: { dishVm.reset() }) {
+                    DishScanResultView(vm: dishVm)
+                }
         }
     }
 
     @ViewBuilder
     private var content: some View {
-        if vm.isLoading || mealVm.isLoading {
+        if vm.isLoading || mealVm.isLoading || dishVm.isLoading {
             loadingView
         } else if let error = vm.scanError {
-            errorView(error, isMeal: false)
+            errorView(error, scanType: .label)
         } else if let error = mealVm.error {
-            errorView(error, isMeal: true)
+            errorView(error, scanType: .meal)
+        } else if let error = dishVm.error {
+            errorView(error, scanType: .dish)
         } else {
             idleView
         }
@@ -86,6 +104,17 @@ struct ScannerView: View {
             .buttonStyle(.bordered)
             .padding(.horizontal, 40)
 
+            Button {
+                dishVm.showCamera = true
+            } label: {
+                Label("Gericht analysieren", systemImage: "frying.pan")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal, 40)
+
             Spacer()
         }
     }
@@ -101,7 +130,9 @@ struct ScannerView: View {
         }
     }
 
-    private func errorView(_ error: GeminiServiceError, isMeal: Bool) -> some View {
+    private enum ScanType { case label, meal, dish }
+
+    private func errorView(_ error: GeminiServiceError, scanType: ScanType) -> some View {
         VStack(spacing: 20) {
             Spacer()
             Image(systemName: "exclamationmark.triangle")
@@ -112,8 +143,11 @@ struct ScannerView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 32)
             Button {
-                if isMeal { mealVm.error = nil; mealVm.showCamera = true }
-                else { vm.reset(); vm.showCamera = true }
+                switch scanType {
+                case .label: vm.reset(); vm.showCamera = true
+                case .meal:  mealVm.error = nil; mealVm.showCamera = true
+                case .dish:  dishVm.error = nil; dishVm.showCamera = true
+                }
             } label: {
                 Label("Nochmals versuchen", systemImage: "arrow.counterclockwise")
                     .frame(maxWidth: .infinity)
@@ -121,7 +155,7 @@ struct ScannerView: View {
             }
             .buttonStyle(.borderedProminent)
             .padding(.horizontal, 40)
-            if !isMeal {
+            if scanType == .label {
                 Button {
                     vm.scanError = nil
                     vm.openManualEntry()

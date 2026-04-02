@@ -11,6 +11,16 @@ struct NutritionScanResult {
     var saltPer100g: Double?
 }
 
+struct DishAnalysisResult: Decodable {
+    let name: String
+    let estimatedGrams: Double
+    let kcal: Double
+    let protein: Double
+    let fat: Double
+    let carbs: Double
+    let fiber: Double
+}
+
 struct MealRawComponent: Decodable {
     let blvName: String
     let grams: Double
@@ -20,6 +30,7 @@ enum GeminiServiceError: LocalizedError {
     case missingApiKey
     case noLabelDetected
     case noMealDetected
+    case noDishDetected
     case networkUnavailable
     case rateLimited
     case invalidResponse
@@ -33,6 +44,8 @@ enum GeminiServiceError: LocalizedError {
             return "Kein Nährwerttisch erkannt. Foto wiederholen oder manuell eingeben."
         case .noMealDetected:
             return "Keine Mahlzeit erkannt. Bitte ein anderes Foto versuchen."
+        case .noDishDetected:
+            return "Kein Gericht erkannt. Bitte ein anderes Foto versuchen."
         case .networkUnavailable:
             return "Kein Internet. Werte manuell eingeben."
         case .rateLimited:
@@ -207,6 +220,94 @@ struct GeminiService {
         return components
     }
 
+    static func analyzeDish(from jpegData: Data) async throws -> DishAnalysisResult {
+        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
+              !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        else { throw GeminiServiceError.missingApiKey }
+
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
+        guard let url = URL(string: urlString) else { throw GeminiServiceError.invalidResponse }
+
+        let prompt = """
+            Du analysierst das Gericht im Foto. Berücksichtige:
+            - Alle sichtbaren Zutaten
+            - Typische Kochöle/Fette zur Zubereitung (Olivenöl, Butter, Sonnenblumenöl fürs Braten/Backen)
+            - Typische Portionsgrössen der Schweizer/mitteleuropäischen Küche
+
+            Gib NUR ein JSON-Objekt zurück — kein Markdown, keine Erklärung:
+            {
+              "name": "<kurzer, präziser Name auf Deutsch>",
+              "estimatedGrams": <Gesamtgewicht der Portion in g>,
+              "kcal": <Gesamtkalorien>,
+              "protein": <Gesamtprotein in g>,
+              "fat": <Gesamtfett inkl. Kochfett in g>,
+              "carbs": <Gesamtkohlenhydrate in g>,
+              "fiber": <Gesamtballaststoffe in g>
+            }
+            Wenn kein Essen sichtbar: {"error": "no_dish_detected"}
+            """
+
+        let body: [String: Any] = [
+            "contents": [[
+                "parts": [
+                    ["inlineData": ["mimeType": "image/jpeg", "data": jpegData.base64EncodedString()]],
+                    ["text": prompt]
+                ]
+            ]],
+            "generationConfig": ["temperature": 0, "responseMimeType": "application/json"]
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch let urlError as URLError {
+            if urlError.code == .notConnectedToInternet || urlError.code == .networkConnectionLost {
+                throw GeminiServiceError.networkUnavailable
+            }
+            throw GeminiServiceError.invalidResponse
+        }
+
+        if let httpResponse = response as? HTTPURLResponse {
+            switch httpResponse.statusCode {
+            case 200: break
+            case 429: throw GeminiServiceError.rateLimited
+            default:  throw GeminiServiceError.serverError(httpResponse.statusCode)
+            }
+        }
+
+        struct GeminiAPIResponse: Decodable {
+            struct Candidate: Decodable {
+                struct Content: Decodable {
+                    struct Part: Decodable { let text: String }
+                    let parts: [Part]
+                }
+                let content: Content
+            }
+            let candidates: [Candidate]
+        }
+        struct ErrorCheck: Decodable { let error: String? }
+
+        guard let apiResponse = try? JSONDecoder().decode(GeminiAPIResponse.self, from: data),
+              let jsonText = apiResponse.candidates.first?.content.parts.first?.text,
+              let jsonData = jsonText.data(using: .utf8)
+        else { throw GeminiServiceError.invalidResponse }
+
+        if let check = try? JSONDecoder().decode(ErrorCheck.self, from: jsonData),
+           check.error == "no_dish_detected" {
+            throw GeminiServiceError.noDishDetected
+        }
+
+        guard let result = try? JSONDecoder().decode(DishAnalysisResult.self, from: jsonData)
+        else { throw GeminiServiceError.invalidResponse }
+
+        return result
+    }
+
     static func analyzeNutrition(prompt: String) async throws -> String {
         guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
               !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
@@ -279,7 +380,7 @@ struct GeminiService {
             byDay[cal.startOfDay(for: entry.date), default: []].append(entry)
         }
 
-        let profileText: String
+        var profileText: String
         if let p = profile {
             let goalLabel = p.goalType == .deficit ? "Kaloriendefizit" : "Massephase"
             let target    = Int(p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta)
@@ -289,6 +390,9 @@ struct GeminiService {
             - Ziel: \(goalLabel), Delta: \(Int(p.kcalDelta)) kcal/Tag
             - Effektives Tagesziel (ohne Bewegung): \(target) kcal
             """
+            if let bf = p.bodyFatPercent {
+                profileText += "\n- Körperfettanteil: \(String(format: "%.1f", bf)) %"
+            }
         } else {
             profileText = "(kein Profil vorhanden)"
         }

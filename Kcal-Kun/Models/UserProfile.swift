@@ -21,6 +21,7 @@ final class UserProfile {
     var kcalDelta: Double = 300.0   // Abweichung vom Grundumsatz (immer positiv)
     var goalType: GoalType = GoalType.deficit
     var photoData: Data?
+    var bodyFatPercent: Double? = nil
 
     init(
         heightCm: Double = 175.0,
@@ -28,7 +29,8 @@ final class UserProfile {
         bmr: Double = 1800.0,
         kcalDelta: Double = 300.0,
         goalType: GoalType = .deficit,
-        photoData: Data? = nil
+        photoData: Data? = nil,
+        bodyFatPercent: Double? = nil
     ) {
         self.heightCm = heightCm
         self.weightKg = weightKg
@@ -36,5 +38,6 @@ final class UserProfile {
         self.kcalDelta = kcalDelta
         self.goalType = goalType
         self.photoData = photoData
+        self.bodyFatPercent = bodyFatPercent
     }
 }

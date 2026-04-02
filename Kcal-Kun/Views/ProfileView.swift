@@ -48,6 +48,7 @@ struct ProfileView: View {
     @State private var kcalDeltaText = ""
     @State private var goalType: GoalType = .deficit
     @State private var photoData: Data? = nil
+    @State private var bodyFatText = ""
     @State private var loaded = false
     @State private var showImagePicker = false
 
@@ -104,6 +105,16 @@ struct ProfileView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
+                    }
+                    HStack {
+                        Text("Körperfett")
+                        Spacer()
+                        TextField("optional", text: $bodyFatText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                        Text("%")
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -164,6 +175,7 @@ struct ProfileView: View {
                 kcalDeltaText = formatDouble(p.kcalDelta)
                 goalType      = p.goalType
                 photoData      = p.photoData
+                bodyFatText   = p.bodyFatPercent.map { formatDouble($0) } ?? ""
                 loaded         = true
             }
         }
@@ -184,8 +196,9 @@ struct ProfileView: View {
         p.weightKg   = w
         p.bmr        = b
         p.kcalDelta  = d
-        p.goalType   = goalType
-        p.photoData  = photoData
+        p.goalType        = goalType
+        p.photoData       = photoData
+        p.bodyFatPercent  = parseDouble(bodyFatText)
         try? modelContext.save()
         dismiss()
     }
