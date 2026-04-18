@@ -6,7 +6,8 @@ final class DiaryEntry {
     @Attribute(.unique) var id: UUID
     var date: Date
     var mealSlot: MealSlot
-    var product: Product
+    var product: Product?
+    var productName: String = ""
     var grams: Double
     var unit: String = "g"
     // Denormalisiert bei Save-Zeit — bleibt korrekt wenn Produkt-Werte später editiert werden
@@ -24,12 +25,13 @@ final class DiaryEntry {
         grams: Double,
         unit: String = "g"
     ) {
-        self.id = id
-        self.date = date
-        self.mealSlot = mealSlot
-        self.product = product
-        self.grams = grams
-        self.unit = unit
+        self.id          = id
+        self.date        = date
+        self.mealSlot    = mealSlot
+        self.product     = product
+        self.productName = product.name
+        self.grams       = grams
+        self.unit        = unit
         let factor = grams / 100.0
         self.kcal    = product.kcalPer100g    * factor
         self.protein = product.proteinPer100g * factor

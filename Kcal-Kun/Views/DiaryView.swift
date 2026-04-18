@@ -105,6 +105,13 @@ struct DiaryView: View {
             .sheet(item: $selectedEntry) { entry in
                 DiaryEntryDetailSheet(entry: entry)
             }
+            .onAppear {
+                let stale = allEntries.filter { $0.productName.isEmpty && $0.product != nil }
+                if !stale.isEmpty {
+                    for entry in stale { entry.productName = entry.product!.name }
+                    try? modelContext.save()
+                }
+            }
             .task(id: selectedDate) {
                 await healthKit.fetchWorkoutKcal(for: selectedDate)
             }
@@ -161,7 +168,10 @@ private struct DiaryEntryDetailSheet: View {
     let entry: DiaryEntry
     @Environment(\.dismiss) private var dismiss
 
-    private var product: Product { entry.product }
+    private var product: Product? { entry.product }
+    private var displayName: String {
+        product?.name ?? (entry.productName.isEmpty ? "Unbekannt" : entry.productName)
+    }
 
     var body: some View {
         NavigationStack {
@@ -177,33 +187,35 @@ private struct DiaryEntryDetailSheet: View {
                     macroRow("Energie",         value: entry.kcal,    unit: "kcal")
                     macroRow("Protein",         value: entry.protein, unit: "g")
                     macroRow("Kohlenhydrate",   value: entry.carbs,   unit: "g")
-                    if let sugar = product.sugarPer100g {
+                    if let sugar = product?.sugarPer100g {
                         macroRow("  davon Zucker", value: sugar * entry.grams / 100, unit: "g")
                     }
                     macroRow("Fett",            value: entry.fat,     unit: "g")
                     macroRow("Ballaststoffe",   value: entry.fiber,   unit: "g")
-                    if let salt = product.saltPer100g {
+                    if let salt = product?.saltPer100g {
                         macroRow("Salz",        value: salt * entry.grams / 100, unit: "g")
                     }
                 }
 
-                Section("Pro 100 \(entry.unit)") {
-                    macroRow("Energie",         value: product.kcalPer100g,    unit: "kcal")
-                    macroRow("Protein",         value: product.proteinPer100g, unit: "g")
-                    macroRow("Kohlenhydrate",   value: product.carbsPer100g,   unit: "g")
-                    if let sugar = product.sugarPer100g {
-                        macroRow("  davon Zucker", value: sugar,               unit: "g")
-                    }
-                    macroRow("Fett",            value: product.fatPer100g,     unit: "g")
-                    if let fiber = product.fiberPer100g {
-                        macroRow("Ballaststoffe", value: fiber,                unit: "g")
-                    }
-                    if let salt = product.saltPer100g {
-                        macroRow("Salz",          value: salt,                 unit: "g")
+                if let p = product {
+                    Section("Pro 100 \(entry.unit)") {
+                        macroRow("Energie",         value: p.kcalPer100g,    unit: "kcal")
+                        macroRow("Protein",         value: p.proteinPer100g, unit: "g")
+                        macroRow("Kohlenhydrate",   value: p.carbsPer100g,   unit: "g")
+                        if let sugar = p.sugarPer100g {
+                            macroRow("  davon Zucker", value: sugar,          unit: "g")
+                        }
+                        macroRow("Fett",            value: p.fatPer100g,     unit: "g")
+                        if let fiber = p.fiberPer100g {
+                            macroRow("Ballaststoffe", value: fiber,           unit: "g")
+                        }
+                        if let salt = p.saltPer100g {
+                            macroRow("Salz",          value: salt,            unit: "g")
+                        }
                     }
                 }
             }
-            .navigationTitle(product.name)
+            .navigationTitle(displayName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -234,7 +246,7 @@ private struct DiaryEntryRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.product.name)
+                Text(entry.product?.name ?? (entry.productName.isEmpty ? "Unbekannt" : entry.productName))
                 Text("\(formatGrams(entry.grams)) \(entry.unit)")
                     .font(.caption)
                     .foregroundStyle(.secondary)

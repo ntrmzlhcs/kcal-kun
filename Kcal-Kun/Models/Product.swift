@@ -19,7 +19,7 @@ final class Product {
     var createdAt: Date
     var imageData: Data?
 
-    @Relationship(deleteRule: .cascade, inverse: \DiaryEntry.product)
+    @Relationship(deleteRule: .nullify, inverse: \DiaryEntry.product)
     var entries: [DiaryEntry] = []
 
     init(

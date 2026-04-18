@@ -15,7 +15,7 @@ struct LibraryView: View {
     }
 
     private var myProducts: [Product] {
-        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual }
+        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual || $0.source == .dish }
         guard !searchText.isEmpty else { return base }
         return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
@@ -54,6 +54,7 @@ struct LibraryView: View {
                                     for i in indexSet {
                                         modelContext.delete(myProducts[i])
                                     }
+                                    try? modelContext.save()
                                 }
                             }
                         }
@@ -84,6 +85,8 @@ struct LibraryView: View {
                     Text("\(Int(product.kcalPer100g)) kcal · \(product.proteinPer100g, specifier: "%.1f")g P")
                     if product.source == .ocr {
                         Text("· Gescannt").foregroundStyle(.blue)
+                    } else if product.source == .dish {
+                        Text("· Gericht").foregroundStyle(.orange)
                     } else if product.source == .manual {
                         Text("· Manuell").foregroundStyle(.purple)
                     }

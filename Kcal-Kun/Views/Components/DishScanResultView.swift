@@ -89,7 +89,7 @@ struct DishScanResultView: View {
             fatPer100g:    vm.fatPer100g,
             carbsPer100g:  vm.carbsPer100g,
             fiberPer100g:  vm.fiberPer100g,
-            source:        .manual
+            source:        .dish
         )
         modelContext.insert(product)
 

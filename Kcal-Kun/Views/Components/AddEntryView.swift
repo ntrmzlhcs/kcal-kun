@@ -35,7 +35,7 @@ struct AddEntryView: View {
     }
 
     private var myProducts: [Product] {
-        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual }
+        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual || $0.source == .dish }
         guard isSearching else { return base }
         return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
@@ -138,6 +138,8 @@ struct AddEntryView: View {
                         Text("\(Int(product.kcalPer100g)) kcal / 100g")
                         if product.source == .ocr {
                             Text("· Gescannt").foregroundStyle(.blue)
+                        } else if product.source == .dish {
+                            Text("· Gericht").foregroundStyle(.orange)
                         } else if product.source == .manual {
                             Text("· Manuell").foregroundStyle(.purple)
                         }

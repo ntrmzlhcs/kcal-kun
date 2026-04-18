@@ -15,7 +15,7 @@ final class HealthKitService {
         do {
             try await store.requestAuthorization(
                 toShare: [],
-                read: [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned)]
+                read: [HKObjectType.workoutType(), HKQuantityType(.activeEnergyBurned), HKQuantityType(.bodyMass)]
             )
             isAuthorized = true
             await fetchWorkoutKcal(for: Date())
@@ -49,6 +49,59 @@ final class HealthKitService {
             let day  = Calendar.current.startOfDay(for: workout.startDate)
             let kcal = workout.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
             result[day, default: 0] += kcal * 0.9
+        }
+        return result
+    }
+
+    func fetchLatestWeightAverage(windowSize: Int = 5) async -> Double? {
+        guard HKHealthStore.isHealthDataAvailable() else { return nil }
+        let sortDesc = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        let samples = try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[HKQuantitySample], Error>) in
+            let query = HKSampleQuery(
+                sampleType: HKQuantityType(.bodyMass),
+                predicate: nil,
+                limit: windowSize,
+                sortDescriptors: [sortDesc]
+            ) { _, samples, error in
+                if let error { continuation.resume(throwing: error); return }
+                continuation.resume(returning: (samples as? [HKQuantitySample]) ?? [])
+            }
+            store.execute(query)
+        }
+        guard let s = samples, !s.isEmpty else { return nil }
+        let total = s.reduce(0.0) { $0 + $1.quantity.doubleValue(for: .gramUnit(with: .kilo)) }
+        return total / Double(s.count)
+    }
+
+    func fetchRollingAverageWeights(days: Int, windowSize: Int = 5) async -> [Date: Double] {
+        guard HKHealthStore.isHealthDataAvailable() else { return [:] }
+        let cal       = Calendar.current
+        let today     = cal.startOfDay(for: Date())
+        let startDate = cal.date(byAdding: .day, value: -(days + 30), to: today)!
+        let endDate   = cal.date(byAdding: .day, value: 1, to: today)!
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let sortAsc   = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        let samples = try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[HKQuantitySample], Error>) in
+            let query = HKSampleQuery(
+                sampleType: HKQuantityType(.bodyMass),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sortAsc]
+            ) { _, samples, error in
+                if let error { continuation.resume(throwing: error); return }
+                continuation.resume(returning: (samples as? [HKQuantitySample]) ?? [])
+            }
+            store.execute(query)
+        }
+        guard let allSamples = samples, !allSamples.isEmpty else { return [:] }
+        var result: [Date: Double] = [:]
+        for offset in 0..<days {
+            let day    = cal.date(byAdding: .day, value: -(days - 1 - offset), to: today)!
+            let dayEnd = cal.date(byAdding: .day, value: 1, to: day)!
+            let window = allSamples.filter { $0.startDate < dayEnd }.suffix(windowSize)
+            guard !window.isEmpty else { continue }
+            let avg = window.reduce(0.0) { $0 + $1.quantity.doubleValue(for: .gramUnit(with: .kilo)) } / Double(window.count)
+            result[day] = avg
         }
         return result
     }

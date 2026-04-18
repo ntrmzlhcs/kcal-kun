@@ -39,6 +39,7 @@ private struct ImagePickerWithCrop: UIViewControllerRepresentable {
 struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(HealthKitService.self) private var healthKit
 
     @Query private var profiles: [UserProfile]
 
@@ -51,6 +52,7 @@ struct ProfileView: View {
     @State private var bodyFatText = ""
     @State private var loaded = false
     @State private var showImagePicker = false
+    @State private var healthKitWeight: Double? = nil
 
     private var profile: UserProfile? { profiles.first }
 
@@ -105,6 +107,11 @@ struct ProfileView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
+                    }
+                    if healthKitWeight != nil {
+                        Text("Ø letzte 5 Messungen · HealthKit")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                     HStack {
                         Text("Körperfett")
@@ -177,6 +184,12 @@ struct ProfileView: View {
                 photoData      = p.photoData
                 bodyFatText   = p.bodyFatPercent.map { formatDouble($0) } ?? ""
                 loaded         = true
+            }
+            .task {
+                if let avg = await healthKit.fetchLatestWeightAverage() {
+                    healthKitWeight = avg
+                    weightText = formatDouble(avg)
+                }
             }
         }
     }

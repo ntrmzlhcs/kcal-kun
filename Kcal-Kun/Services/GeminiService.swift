@@ -420,7 +420,7 @@ struct GeminiService {
                 daysLines += "\n  (keine Einträge)"
             } else {
                 for entry in dayEntries {
-                    daysLines += "\n  - \(entry.product.name), \(Int(entry.grams.rounded()))g"
+                    daysLines += "\n  - \(entry.product?.name ?? entry.productName), \(Int(entry.grams.rounded()))g"
                 }
             }
         }

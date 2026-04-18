@@ -11,6 +11,7 @@ struct StatsView: View {
     @AppStorage("aiNutritionAnalysisTimestamp") private var cachedTimestamp: Double = 0
     @State private var isLoadingAnalysis = false
     @State private var analysisError: String? = nil
+    @State private var rollingWeights: [Date: Double] = [:]
 
     private var dayEntries: [DiaryEntry] {
         allEntries.filter { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
@@ -46,7 +47,14 @@ struct StatsView: View {
                             .padding(.horizontal)
                         FiberProgressBar(fiber: totals.fiber)
                             .padding(.horizontal)
-                    } else {
+                    }
+
+                    if rollingWeights.count >= 2 {
+                        WeightChart(data: rollingWeights)
+                            .padding(.horizontal)
+                    }
+
+                    if !totals.hasData {
                         ContentUnavailableView(
                             "Noch keine Einträge",
                             systemImage: "chart.pie",
@@ -67,6 +75,9 @@ struct StatsView: View {
                 .padding(.bottom)
             }
             .navigationTitle("Statistik")
+        }
+        .task {
+            rollingWeights = await healthKit.fetchRollingAverageWeights(days: 30)
         }
     }
 }
@@ -159,6 +170,64 @@ private struct NutritionAnalysisCard: View {
                     .font(.subheadline)
                     .lineSpacing(4)
             }
+        }
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+// MARK: - WeightChart
+
+private struct WeightChart: View {
+    let data: [Date: Double]
+
+    private struct DataPoint: Identifiable {
+        let id = UUID()
+        let day: Date
+        let kg: Double
+    }
+
+    private var chartData: [DataPoint] {
+        data.map { DataPoint(day: $0.key, kg: $0.value) }
+            .sorted { $0.day < $1.day }
+    }
+
+    private var yMin: Double { (chartData.map(\.kg).min() ?? 0) - 1 }
+    private var yMax: Double { (chartData.map(\.kg).max() ?? 0) + 1 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Gewichtsverlauf")
+                    .font(.headline)
+                Text("Ø 5 Messungen · 30 Tage")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Chart(chartData) { point in
+                LineMark(
+                    x: .value("Datum", point.day),
+                    y: .value("kg", point.kg)
+                )
+                .interpolationMethod(.catmullRom)
+                .foregroundStyle(.blue)
+                PointMark(
+                    x: .value("Datum", point.day),
+                    y: .value("kg", point.kg)
+                )
+                .foregroundStyle(.blue)
+                .symbolSize(30)
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .day, count: 7)) { _ in
+                    AxisValueLabel(format: .dateTime.day().month(.abbreviated)
+                        .locale(Locale(identifier: "de")))
+                    AxisGridLine()
+                }
+            }
+            .chartYScale(domain: yMin...yMax)
+            .frame(height: 180)
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -314,8 +383,9 @@ struct DateNavigator: View {
     }
 
     private var displayLabel: String {
-        if Calendar.current.isDateInToday(selectedDate) { return "Heute" }
         if Calendar.current.isDateInYesterday(selectedDate) { return "Gestern" }
+        if Calendar.current.isDateInToday(selectedDate)     { return "Heute" }
+        if Calendar.current.isDateInTomorrow(selectedDate)  { return "Morgen" }
         return selectedDate.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "de")))
     }
 
@@ -343,9 +413,7 @@ struct DateNavigator: View {
                 Image(systemName: "chevron.right")
                     .font(.title3)
                     .padding(.horizontal)
-                    .foregroundStyle(isToday ? .tertiary : .primary)
             }
-            .disabled(isToday)
         }
         .buttonStyle(.borderless)
         .padding(.vertical, 8)
