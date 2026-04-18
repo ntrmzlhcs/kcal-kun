@@ -365,11 +365,14 @@ struct GeminiService {
     static func buildNutritionPrompt(
         entries: [DiaryEntry],
         workoutKcals: [Date: Double],
-        profile: UserProfile?
+        profile: UserProfile?,
+        rollingWeights: [Date: Double] = [:]
     ) -> String {
         let cal   = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let days  = (0..<7).map { cal.date(byAdding: .day, value: -$0, to: today)! }.reversed()
+        let allDays   = (0..<30).map { cal.date(byAdding: .day, value: -$0, to: today)! }.reversed()
+        let recentDays = Array(allDays.suffix(7))
+        let olderDays  = Array(allDays.prefix(23))
 
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "de_CH")
@@ -397,11 +400,45 @@ struct GeminiService {
             profileText = "(kein Profil vorhanden)"
         }
 
-        var daysLines = ""
-        var totalKcal = 0.0, totalWorkout = 0.0
-        var daysWithEntries = 0, daysWithWorkout = 0
+        // Gewichtsabschnitt
+        var weightSection = ""
+        let sortedWeights = rollingWeights.sorted { $0.key < $1.key }
+        if sortedWeights.count >= 2 {
+            let first = sortedWeights.first!
+            let last  = sortedWeights.last!
+            let delta = last.value - first.value
+            let sign  = delta >= 0 ? "+" : ""
+            let days30 = cal.dateComponents([.day], from: first.key, to: last.key).day ?? 0
+            var lines  = sortedWeights.map { "\(fmt.string(from: $0.key)): \(String(format: "%.1f", $0.value)) kg" }.joined(separator: "\n")
+            lines += "\nTrend: \(String(format: "%.1f", first.value)) kg → \(String(format: "%.1f", last.value)) kg (\(sign)\(String(format: "%.1f", delta)) kg über \(days30) Tage)"
+            weightSection = "\n\nGEWICHTSVERLAUF (Ø 5 Messungen):\n\(lines)"
+        }
 
-        for day in days {
+        // Ältere 23 Tage (Übersicht, ohne Produktliste)
+        var olderLines = ""
+        var olderKcal = 0.0, olderWorkout = 0.0
+        var olderWithEntries = 0, olderWithWorkout = 0
+        for day in olderDays {
+            let dayEntries = byDay[day] ?? []
+            let workout    = workoutKcals[day] ?? 0
+            let dayKcal    = dayEntries.reduce(0) { $0 + $1.kcal }
+            let dayProtein = dayEntries.reduce(0) { $0 + $1.protein }
+            let dayCarbs   = dayEntries.reduce(0) { $0 + $1.carbs }
+            let dayFat     = dayEntries.reduce(0) { $0 + $1.fat }
+            olderKcal    += dayKcal
+            olderWorkout += workout
+            if dayKcal  > 0 { olderWithEntries += 1 }
+            if workout  > 0 { olderWithWorkout += 1 }
+            olderLines += "\n\(fmt.string(from: day)) | \(Int(dayKcal)) kcal (P \(Int(dayProtein))g K \(Int(dayCarbs))g F \(Int(dayFat))g) | Workout: \(Int(workout)) kcal"
+        }
+        let olderAvgKcal    = olderWithEntries > 0 ? Int((olderKcal / Double(olderWithEntries)).rounded()) : 0
+        let olderAvgWorkout = olderWithWorkout > 0 ? Int((olderWorkout / Double(olderWithWorkout)).rounded()) : 0
+
+        // Letzte 7 Tage (Detail mit Produktliste)
+        var recentLines = ""
+        var recentKcal = 0.0, recentWorkout = 0.0
+        var recentWithEntries = 0, recentWithWorkout = 0
+        for day in recentDays {
             let dayEntries = byDay[day] ?? []
             let workout    = workoutKcals[day] ?? 0
             let dayKcal    = dayEntries.reduce(0) { $0 + $1.kcal }
@@ -409,45 +446,46 @@ struct GeminiService {
             let dayCarbs   = dayEntries.reduce(0) { $0 + $1.carbs }
             let dayFat     = dayEntries.reduce(0) { $0 + $1.fat }
             let dayFiber   = dayEntries.reduce(0) { $0 + $1.fiber }
-
-            totalKcal    += dayKcal
-            totalWorkout += workout
-            if dayKcal   > 0 { daysWithEntries += 1 }
-            if workout   > 0 { daysWithWorkout += 1 }
-
-            daysLines += "\n\n\(fmt.string(from: day)) | Ernährung: \(Int(dayKcal)) kcal (P \(Int(dayProtein))g, K \(Int(dayCarbs))g, F \(Int(dayFat))g, B \(String(format: "%.1f", dayFiber))g) | Bewegung: \(Int(workout)) kcal"
+            recentKcal    += dayKcal
+            recentWorkout += workout
+            if dayKcal  > 0 { recentWithEntries += 1 }
+            if workout  > 0 { recentWithWorkout += 1 }
+            recentLines += "\n\n\(fmt.string(from: day)) | Ernährung: \(Int(dayKcal)) kcal (P \(Int(dayProtein))g, K \(Int(dayCarbs))g, F \(Int(dayFat))g, B \(String(format: "%.1f", dayFiber))g) | Bewegung: \(Int(workout)) kcal"
             if dayEntries.isEmpty {
-                daysLines += "\n  (keine Einträge)"
+                recentLines += "\n  (keine Einträge)"
             } else {
                 for entry in dayEntries {
-                    daysLines += "\n  - \(entry.product?.name ?? entry.productName), \(Int(entry.grams.rounded()))g"
+                    recentLines += "\n  - \(entry.product?.name ?? entry.productName), \(Int(entry.grams.rounded()))g"
                 }
             }
         }
+        let recentAvgKcal    = Int((recentKcal    / 7).rounded())
+        let recentAvgWorkout = Int((recentWorkout / 7).rounded())
 
-        let avgKcal    = Int((totalKcal    / 7).rounded())
-        let avgWorkout = Int((totalWorkout / 7).rounded())
-        let from = fmt.string(from: days.first ?? today)
-        let to   = fmt.string(from: today)
+        let from30 = fmt.string(from: allDays.first ?? today)
 
         return """
-        Du bist Ernährungs- und Sportwissenschaftler. Analysiere die Ernährung und Aktivität der letzten 7 Tage.
-        Stütze dich auf aktuelle wissenschaftliche Erkenntnisse, ohne Bias oder kommerzielle Interessen.
+        Du bist Ernährungs- und Sportwissenschaftler. Analysiere Ernährung und Aktivität der letzten 30 Tage.
+        Stütze dich auf aktuelle wissenschaftliche Erkenntnisse, ohne Bias oder kommerzielle Interessen.\(weightSection)
 
         Nutzerprofil:
         \(profileText)
 
-        Einträge \(from)–\(to):\(daysLines)
+        TAGE 8–30 (Übersicht, \(from30) – \(fmt.string(from: recentDays.first ?? today))):\(olderLines)
 
-        Ø Ernährungskalorien/Tag: \(avgKcal) kcal | Ø Bewegungskalorien/Tag: \(avgWorkout) kcal
-        Tage mit Einträgen: \(daysWithEntries)/7 | Tage mit Bewegung: \(daysWithWorkout)/7
+        Ø Tage 8–30: \(olderAvgKcal) kcal Ernährung/Tag | \(olderAvgWorkout) kcal Workout/Tag (an Workout-Tagen) | Tage mit Einträgen: \(olderWithEntries)/23 | Tage mit Workout: \(olderWithWorkout)/23
 
-        Analysiere auf Deutsch in 3–5 Absätzen:
-        1. Energiebilanz (Ist vs. Ziel inkl. Bewegung, Konsistenz)
-        2. Makronährstoffqualität und -verteilung
-        3. Lebensmittelqualität (Verarbeitungsgrad, Vielfalt, Nährstoffdichte)
-        4. Bewegungsverhalten und dessen Einfluss auf die Bilanz
-        5. Konkrete, priorisierte Empfehlungen
+        LETZTE 7 TAGE (Detail, \(fmt.string(from: recentDays.first ?? today)) – \(fmt.string(from: today))):\(recentLines)
+
+        Ø letzte 7 Tage: \(recentAvgKcal) kcal Ernährung/Tag | \(recentAvgWorkout) kcal Workout/Tag | Tage mit Einträgen: \(recentWithEntries)/7 | Tage mit Workout: \(recentWithWorkout)/7
+
+        Analysiere auf Deutsch mit Markdown-Formatierung (fett für Schlüsselbegriffe):
+        1. **Gewichtsverlauf & Energiebilanz**: Trend, Konsistenz mit Kalorienziel über 30 Tage
+        2. **Vergleich letzte 7 Tage vs. Tage 8–30**: Verbesserungen oder Verschlechterungen in Kalorien, Makros, Konsistenz
+        3. **Makronährstoffqualität**: Verteilung, Protein-Adequacy, Ballaststoffe
+        4. **Lebensmittelqualität**: Verarbeitungsgrad, Vielfalt, Nährstoffdichte
+        5. **Bewegungsverhalten**: Frequenz, Einfluss auf Energiebilanz
+        6. **Drei konkrete Mahlzeitenvorschläge** passend zu meinen bisherigen Gewohnheiten, die Ernährungslücken schliessen — je mit Portionsgrösse und geschätzten Nährwerten
         Sei direkt und präzise. Keine allgemeinen Floskeln.
         """
     }

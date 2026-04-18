@@ -19,7 +19,7 @@ struct StatsView: View {
 
     private var analysisPeriodEntries: [DiaryEntry] {
         let cutoff = Calendar.current.startOfDay(
-            for: Calendar.current.date(byAdding: .day, value: -6, to: Date())!
+            for: Calendar.current.date(byAdding: .day, value: -29, to: Date())!
         )
         return allEntries.filter { $0.date >= cutoff }
     }
@@ -89,12 +89,13 @@ extension StatsView {
         isLoadingAnalysis = true
         analysisError = nil
         do {
-            let workoutKcals = await healthKit.fetchWorkoutKcals(forLast: 7)
+            let workoutKcals = await healthKit.fetchWorkoutKcals(forLast: 30)
             // Prompt auf @MainActor bauen (SwiftData-Modelle sind nicht Sendable)
             let prompt = GeminiService.buildNutritionPrompt(
                 entries: analysisPeriodEntries,
                 workoutKcals: workoutKcals,
-                profile: profiles.first
+                profile: profiles.first,
+                rollingWeights: rollingWeights
             )
             let text = try await GeminiService.analyzeNutrition(prompt: prompt)
             cachedAnalysis = text
@@ -125,7 +126,7 @@ private struct NutritionAnalysisCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("KI-Analyse (7 Tage)")
+                Text("KI-Analyse (30 Tage)")
                     .font(.headline)
                 Spacer()
                 Button {
@@ -162,11 +163,15 @@ private struct NutritionAnalysisCard: View {
                     .font(.subheadline)
                     .foregroundStyle(.orange)
             } else if analysis.isEmpty {
-                Text("Tippe auf 'Aktualisieren' für eine Auswertung der letzten 7 Tage.")
+                Text("Tippe auf 'Aktualisieren' für eine Auswertung der letzten 30 Tage.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                Text(analysis)
+                let rendered = (try? AttributedString(
+                    markdown: analysis,
+                    options: .init(interpretedSyntax: .inlinesOnlyPreservingWhitespace)
+                )) ?? AttributedString(analysis)
+                Text(rendered)
                     .font(.subheadline)
                     .lineSpacing(4)
             }
@@ -220,8 +225,8 @@ private struct WeightChart: View {
                 .symbolSize(30)
             }
             .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 7)) { _ in
-                    AxisValueLabel(format: .dateTime.day().month(.abbreviated)
+                AxisMarks(values: .stride(by: .day, count: 10)) { _ in
+                    AxisValueLabel(format: .dateTime.day().month(.abbreviated).year()
                         .locale(Locale(identifier: "de")))
                     AxisGridLine()
                 }
