@@ -210,34 +210,57 @@ private struct KcalSummaryCard: View {
 
 private struct DiaryEntryDetailSheet: View {
     let entry: DiaryEntry
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+
+    @State private var gramsText = ""
 
     private var product: Product? { entry.product }
     private var displayName: String {
         product?.name ?? (entry.productName.isEmpty ? "Unbekannt" : entry.productName)
     }
+    private var currentGrams: Double {
+        Double(gramsText.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+    private var factor: Double { currentGrams / 100.0 }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    LabeledContent("Portion") {
-                        Text("\(formatAmount(entry.grams)) \(entry.unit)")
+                    HStack {
+                        Text("Portion")
+                        Spacer()
+                        TextField("Menge", text: $gramsText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                        Text(entry.unit)
                             .foregroundStyle(.secondary)
                     }
                 }
 
                 Section("Nährwerte (Portion)") {
-                    macroRow("Energie",         value: entry.kcal,    unit: "kcal")
-                    macroRow("Protein",         value: entry.protein, unit: "g")
-                    macroRow("Kohlenhydrate",   value: entry.carbs,   unit: "g")
-                    if let sugar = product?.sugarPer100g {
-                        macroRow("  davon Zucker", value: sugar * entry.grams / 100, unit: "g")
-                    }
-                    macroRow("Fett",            value: entry.fat,     unit: "g")
-                    macroRow("Ballaststoffe",   value: entry.fiber,   unit: "g")
-                    if let salt = product?.saltPer100g {
-                        macroRow("Salz",        value: salt * entry.grams / 100, unit: "g")
+                    if let p = product {
+                        macroRow("Energie",       value: p.kcalPer100g    * factor, unit: "kcal")
+                        macroRow("Protein",       value: p.proteinPer100g * factor, unit: "g")
+                        macroRow("Kohlenhydrate", value: p.carbsPer100g   * factor, unit: "g")
+                        if let sugar = p.sugarPer100g {
+                            macroRow("  davon Zucker", value: sugar * factor, unit: "g")
+                        }
+                        macroRow("Fett",          value: p.fatPer100g     * factor, unit: "g")
+                        if let fiber = p.fiberPer100g {
+                            macroRow("Ballaststoffe",  value: fiber * factor, unit: "g")
+                        }
+                        if let salt = p.saltPer100g {
+                            macroRow("Salz",           value: salt  * factor, unit: "g")
+                        }
+                    } else {
+                        macroRow("Energie",       value: entry.kcal,    unit: "kcal")
+                        macroRow("Protein",       value: entry.protein, unit: "g")
+                        macroRow("Kohlenhydrate", value: entry.carbs,   unit: "g")
+                        macroRow("Fett",          value: entry.fat,     unit: "g")
+                        macroRow("Ballaststoffe", value: entry.fiber,   unit: "g")
                     }
                 }
 
@@ -247,7 +270,7 @@ private struct DiaryEntryDetailSheet: View {
                         macroRow("Protein",         value: p.proteinPer100g, unit: "g")
                         macroRow("Kohlenhydrate",   value: p.carbsPer100g,   unit: "g")
                         if let sugar = p.sugarPer100g {
-                            macroRow("  davon Zucker", value: sugar,          unit: "g")
+                            macroRow("  davon Zucker", value: sugar, unit: "g")
                         }
                         macroRow("Fett",            value: p.fatPer100g,     unit: "g")
                         if let fiber = p.fiberPer100g {
@@ -262,11 +285,25 @@ private struct DiaryEntryDetailSheet: View {
             .navigationTitle(displayName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Abbrechen") { dismiss() }
+                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Fertig") { dismiss() }
+                    Button("Speichern") { save() }
+                        .disabled(currentGrams <= 0)
                 }
             }
+            .onAppear {
+                let g = entry.grams
+                gramsText = g.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(g)) : String(format: "%.1f", g)
+            }
         }
+    }
+
+    private func save() {
+        entry.grams = currentGrams
+        try? modelContext.save()
+        dismiss()
     }
 
     private func macroRow(_ label: String, value: Double, unit: String) -> some View {
@@ -277,10 +314,6 @@ private struct DiaryEntryDetailSheet: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
         }
-    }
-
-    private func formatAmount(_ g: Double) -> String {
-        g.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(g)) : String(format: "%.1f", g)
     }
 }
 
