@@ -302,6 +302,14 @@ private struct DiaryEntryDetailSheet: View {
 
     private func save() {
         entry.grams = currentGrams
+        if let p = entry.product {
+            let f = currentGrams / 100.0
+            entry.kcal    = p.kcalPer100g    * f
+            entry.protein = p.proteinPer100g * f
+            entry.fat     = p.fatPer100g     * f
+            entry.carbs   = p.carbsPer100g   * f
+            entry.fiber   = (p.fiberPer100g ?? 0) * f
+        }
         try? modelContext.save()
         dismiss()
     }
