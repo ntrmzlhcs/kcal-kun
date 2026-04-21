@@ -11,9 +11,8 @@ struct DiaryView: View {
     @State private var activeSheet: MealSlot? = nil
     @State private var showProfile = false
     @State private var selectedEntry: DiaryEntry? = nil
-    @State private var isSelecting = false
-    @State private var selectedEntryIDs: Set<PersistentIdentifier> = []
-    @State private var showCopySheet = false
+    @State private var entryToCopy: DiaryEntry? = nil
+    @State private var showExportOptions = false
 
     private var profile: UserProfile? { profiles.first }
 
@@ -62,26 +61,18 @@ struct DiaryView: View {
 
                         Section {
                             ForEach(slotEntries) { entry in
-                                Button {
-                                    if isSelecting {
-                                        let id = entry.persistentModelID
-                                        if selectedEntryIDs.contains(id) { selectedEntryIDs.remove(id) }
-                                        else { selectedEntryIDs.insert(id) }
-                                    } else {
-                                        selectedEntry = entry
-                                    }
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        if isSelecting {
-                                            let selected = selectedEntryIDs.contains(entry.persistentModelID)
-                                            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                                                .foregroundStyle(selected ? .blue : .secondary)
-                                                .font(.title3)
-                                        }
-                                        DiaryEntryRow(entry: entry)
-                                    }
+                                Button { selectedEntry = entry } label: {
+                                    DiaryEntryRow(entry: entry)
                                 }
                                 .buttonStyle(.plain)
+                                .swipeActions(edge: .leading) {
+                                    Button {
+                                        entryToCopy = entry
+                                    } label: {
+                                        Label("Kopieren", systemImage: "doc.on.doc")
+                                    }
+                                    .tint(.blue)
+                                }
                             }
                             .onDelete { indexSet in
                                 deleteEntries(slotEntries, at: indexSet)
@@ -110,23 +101,13 @@ struct DiaryView: View {
             .navigationTitle("Tagebuch")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if isSelecting {
-                        Button("Kopieren (\(selectedEntryIDs.count))") { showCopySheet = true }
-                            .disabled(selectedEntryIDs.isEmpty)
-                    } else {
-                        Button { showProfile = true } label: { avatarView }
-                    }
+                    Button { showProfile = true } label: { avatarView }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    if isSelecting {
-                        Button("Abbrechen") {
-                            isSelecting = false
-                            selectedEntryIDs = []
-                        }
-                    } else {
-                        Button("Auswählen") { isSelecting = true }
-                            .disabled(dayEntries.isEmpty)
+                    Button { showExportOptions = true } label: {
+                        Image(systemName: "square.and.arrow.up")
                     }
+                    .disabled(allEntries.isEmpty)
                 }
             }
             .sheet(item: $activeSheet) { slot in
@@ -138,16 +119,24 @@ struct DiaryView: View {
             .sheet(item: $selectedEntry) { entry in
                 DiaryEntryDetailSheet(entry: entry)
             }
-            .sheet(isPresented: $showCopySheet) {
-                let entriesToCopy = dayEntries.filter { selectedEntryIDs.contains($0.persistentModelID) }
+            .sheet(item: $entryToCopy) { entry in
                 let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
-                CopyEntriesSheet(entries: entriesToCopy, defaultDate: nextDay) {
-                    isSelecting = false
-                    selectedEntryIDs = []
+                CopyEntriesSheet(entries: [entry], defaultDate: nextDay) {
+                    entryToCopy = nil
                 }
             }
-            .onChange(of: selectedDate) { _, _ in
-                if isSelecting { isSelecting = false; selectedEntryIDs = [] }
+            .confirmationDialog("Exportieren", isPresented: $showExportOptions, titleVisibility: .visible) {
+                Button("Heute") { exportCSV(entries: dayEntries, label: "heute") }
+                Button("Letzte 7 Tage") {
+                    let cutoff = Calendar.current.date(byAdding: .day, value: -6, to: selectedDate)!
+                    exportCSV(entries: allEntries.filter { $0.date >= cutoff }, label: "7-tage")
+                }
+                Button("Letzte 30 Tage") {
+                    let cutoff = Calendar.current.date(byAdding: .day, value: -29, to: selectedDate)!
+                    exportCSV(entries: allEntries.filter { $0.date >= cutoff }, label: "30-tage")
+                }
+                Button("Alle Daten") { exportCSV(entries: allEntries, label: "alle") }
+                Button("Abbrechen", role: .cancel) {}
             }
             .onAppear {
                 let stale = allEntries.filter { $0.productName.isEmpty && $0.product != nil }
@@ -182,6 +171,45 @@ struct DiaryView: View {
             modelContext.delete(slotEntries[index])
         }
         try? modelContext.save()
+    }
+
+    private func generateCSV(entries: [DiaryEntry]) -> String {
+        var lines = ["Datum,Mahlzeit,Produkt,Gramm,Einheit,Kcal,Protein,Fett,Kohlenhydrate,Ballaststoffe"]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        for entry in entries.sorted(by: { $0.date == $1.date ? $0.mealSlot.rawValue < $1.mealSlot.rawValue : $0.date < $1.date }) {
+            let name = (entry.product?.name ?? entry.productName)
+                .replacingOccurrences(of: ",", with: ";")
+            lines.append([
+                formatter.string(from: entry.date),
+                entry.mealSlot.rawValue,
+                name,
+                String(format: "%.1f", entry.grams),
+                entry.unit,
+                String(format: "%.0f", entry.kcal),
+                String(format: "%.1f", entry.protein),
+                String(format: "%.1f", entry.fat),
+                String(format: "%.1f", entry.carbs),
+                String(format: "%.1f", entry.fiber)
+            ].joined(separator: ","))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func exportCSV(entries: [DiaryEntry], label: String) {
+        let csv = generateCSV(entries: entries)
+        let filename = "Kcal-Kun-\(label).csv"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        try? csv.write(to: url, atomically: true, encoding: .utf8)
+
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController else { return }
+        var presentingVC = rootVC
+        while let presented = presentingVC.presentedViewController {
+            presentingVC = presented
+        }
+        presentingVC.present(activityVC, animated: true)
     }
 }
 
@@ -453,3 +481,4 @@ private struct CopyEntriesSheet: View {
         dismiss()
     }
 }
+

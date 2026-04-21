@@ -12,6 +12,7 @@ struct StatsView: View {
     @State private var isLoadingAnalysis = false
     @State private var analysisError: String? = nil
     @State private var rollingWeights: [Date: Double] = [:]
+    @State private var weeklyWorkoutKcals: [Date: Double] = [:]
 
     private var dayEntries: [DiaryEntry] {
         allEntries.filter { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
@@ -20,6 +21,13 @@ struct StatsView: View {
     private var analysisPeriodEntries: [DiaryEntry] {
         let cutoff = Calendar.current.startOfDay(
             for: Calendar.current.date(byAdding: .day, value: -29, to: Date())!
+        )
+        return allEntries.filter { $0.date >= cutoff }
+    }
+
+    private var last7DayEntries: [DiaryEntry] {
+        let cutoff = Calendar.current.startOfDay(
+            for: Calendar.current.date(byAdding: .day, value: -6, to: Date())!
         )
         return allEntries.filter { $0.date >= cutoff }
     }
@@ -46,6 +54,8 @@ struct StatsView: View {
                         MacroDonutChart(totals: totals)
                             .padding(.horizontal)
                         FiberProgressBar(fiber: totals.fiber)
+                            .padding(.horizontal)
+                        WeeklyKcalChart(entries: last7DayEntries, workoutKcals: weeklyWorkoutKcals, profile: profiles.first)
                             .padding(.horizontal)
                     }
 
@@ -78,6 +88,7 @@ struct StatsView: View {
         }
         .task {
             rollingWeights = await healthKit.fetchRollingAverageWeights(days: 30)
+            weeklyWorkoutKcals = await healthKit.fetchWorkoutKcals(forLast: 7)
         }
     }
 }
@@ -169,7 +180,7 @@ private struct NutritionAnalysisCard: View {
             } else {
                 let rendered = (try? AttributedString(
                     markdown: analysis,
-                    options: .init(interpretedSyntax: .inlinesOnlyPreservingWhitespace)
+                    options: .init(interpretedSyntax: .full)
                 )) ?? AttributedString(analysis)
                 Text(rendered)
                     .font(.subheadline)
@@ -375,6 +386,91 @@ private struct FiberProgressBar: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+// MARK: - WeeklyKcalChart
+
+private struct WeeklyKcalChart: View {
+    let entries: [DiaryEntry]
+    let workoutKcals: [Date: Double]
+    let profile: UserProfile?
+
+    private struct DayData: Identifiable {
+        let id = UUID()
+        let day: Date
+        let kcal: Double
+        let effectiveTarget: Double
+        let label: String
+    }
+
+    private var chartData: [DayData] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "de")
+        fmt.dateFormat = "EEE"
+        let baseTarget: Double
+        if let p = profile {
+            baseTarget = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
+        } else {
+            baseTarget = 0
+        }
+        return (0..<7).compactMap { offset -> DayData? in
+            guard let day = cal.date(byAdding: .day, value: -(6 - offset), to: today) else { return nil }
+            let kcal = entries
+                .filter { cal.isDate($0.date, inSameDayAs: day) }
+                .reduce(0) { $0 + $1.kcal }
+            let workout = workoutKcals[day] ?? 0
+            let effective = baseTarget > 0 ? baseTarget + workout : 0
+            return DayData(day: day, kcal: kcal, effectiveTarget: effective, label: fmt.string(from: day))
+        }
+    }
+
+    private var hasTarget: Bool { profile != nil }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Letzte 7 Tage")
+                    .font(.headline)
+                Spacer()
+                if let p = profile {
+                    let base = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
+                    Text("Ziel \(Int(base)) kcal")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
+            }
+
+            Chart {
+                ForEach(chartData) { d in
+                    BarMark(
+                        x: .value("Tag", d.label),
+                        y: .value("kcal", d.kcal)
+                    )
+                    .foregroundStyle(barColor(for: d).gradient)
+                    .cornerRadius(4)
+                }
+                if let p = profile {
+                    let base = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
+                    RuleMark(y: .value("Ziel", base))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5]))
+                        .foregroundStyle(.blue.opacity(0.8))
+                }
+            }
+            .chartXAxis {
+                AxisMarks { _ in AxisValueLabel() }
+            }
+            .frame(height: 160)
+        }
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func barColor(for d: DayData) -> Color {
+        guard d.effectiveTarget > 0 else { return .orange }
+        return d.kcal > d.effectiveTarget ? .red : .green
     }
 }
 
