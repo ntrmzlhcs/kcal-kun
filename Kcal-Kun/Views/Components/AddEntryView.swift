@@ -47,8 +47,6 @@ struct AddEntryView: View {
         }
     }
 
-    // MARK: - Gram parsing
-
     private var grams: Double? {
         let normalized = gramsText.replacingOccurrences(of: ",", with: ".")
         guard !normalized.isEmpty else { return nil }
@@ -74,49 +72,77 @@ struct AddEntryView: View {
     // MARK: - Phase 1: Produkt wählen
 
     private var productPickerView: some View {
-        List {
-            if !favorites.isEmpty {
-                Section("Favoriten") {
-                    ForEach(favorites) { product in
-                        productRow(product)
-                    }
-                }
-            }
-
-            if !myProducts.isEmpty {
-                Section("Meine Produkte") {
-                    ForEach(myProducts) { product in
-                        productRow(product)
-                    }
-                }
-            }
-
-            if isSearching {
-                if !databaseProducts.isEmpty {
-                    Section("Datenbank") {
-                        ForEach(databaseProducts) { product in
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            List {
+                if !favorites.isEmpty {
+                    Section {
+                        ForEach(favorites) { product in
                             productRow(product)
                         }
+                    } header: {
+                        SectionLabel(text: "Favoriten").padding(.top, 4)
                     }
+                    .listRowBackground(Color.cardBackground)
+                    .listRowSeparatorTint(Color.inkDivider)
                 }
-            } else if favorites.isEmpty && myProducts.isEmpty {
-                Section {
-                    Text("Suche in der Datenbank, um generische Lebensmittel zu finden (z. B. «Brokkoli», «Lachs»).")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+
+                if !myProducts.isEmpty {
+                    Section {
+                        ForEach(myProducts) { product in
+                            productRow(product)
+                        }
+                    } header: {
+                        SectionLabel(text: "Meine Produkte").padding(.top, 4)
+                    }
+                    .listRowBackground(Color.cardBackground)
+                    .listRowSeparatorTint(Color.inkDivider)
+                }
+
+                if isSearching {
+                    if !databaseProducts.isEmpty {
+                        Section {
+                            ForEach(databaseProducts) { product in
+                                productRow(product)
+                            }
+                        } header: {
+                            SectionLabel(text: "Datenbank").padding(.top, 4)
+                        }
+                        .listRowBackground(Color.cardBackground)
+                        .listRowSeparatorTint(Color.inkDivider)
+                    }
+                } else if favorites.isEmpty && myProducts.isEmpty {
+                    Section {
+                        HStack(spacing: 10) {
+                            MascotView(size: 24, mood: .think, tone: .beige)
+                            Text("Suche in der Datenbank, um generische Lebensmittel zu finden (z. B. «Brokkoli», «Lachs»).")
+                                .font(.system(size: 13))
+                                .foregroundStyle(Color.inkSecondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .listRowBackground(Color.cardBackground)
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .searchable(text: $searchText, prompt: "Suchen (Brokkoli, Lachs, ...)")
         }
-        .searchable(text: $searchText, prompt: "Suchen (Brokkoli, Lachs, ...)")
-        .navigationTitle("Produkt wählen")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Produkt wählen")
+                    .font(.display(18))
+                    .foregroundStyle(Color.inkPrimary)
+            }
             ToolbarItem(placement: .cancellationAction) {
                 Button("Abbrechen") { dismiss() }
+                    .foregroundStyle(Color.warmBrown)
             }
             ToolbarItem(placement: .primaryAction) {
                 Button { showManualEntry = true } label: {
                     Image(systemName: "plus")
+                        .foregroundStyle(Color.warmBrown)
                 }
             }
         }
@@ -126,26 +152,31 @@ struct AddEntryView: View {
     }
 
     private func productRow(_ product: Product) -> some View {
-        HStack {
+        HStack(spacing: 12) {
             Button {
                 selectedProduct = product
                 gramsText = ""
             } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(product.name)
-                        .foregroundStyle(.primary)
-                    HStack(spacing: 6) {
-                        Text("\(Int(product.kcalPer100g)) kcal / 100g")
-                        if product.source == .ocr {
-                            Text("· Gescannt").foregroundStyle(.blue)
-                        } else if product.source == .dish {
-                            Text("· Gericht").foregroundStyle(.orange)
-                        } else if product.source == .manual {
-                            Text("· Manuell").foregroundStyle(.purple)
-                        }
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(product.source == .preloaded ? Color.beige : Color.terra.opacity(0.15))
+                            .frame(width: 34, height: 34)
+                        Text(String(product.name.prefix(1)).uppercased())
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.warmBrown)
                     }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(product.name)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.inkPrimary)
+                        HStack(spacing: 4) {
+                            Text("\(Int(product.kcalPer100g)) kcal / 100g")
+                                .foregroundStyle(Color.inkSecondary)
+                            sourceTag(for: product)
+                        }
+                        .font(.system(size: 11))
+                    }
                 }
             }
             .buttonStyle(.plain)
@@ -154,75 +185,159 @@ struct AddEntryView: View {
                 product.isFavorite.toggle()
             } label: {
                 Image(systemName: product.isFavorite ? "star.fill" : "star")
-                    .foregroundStyle(product.isFavorite ? .yellow : .secondary)
+                    .foregroundStyle(product.isFavorite ? Color.amber : Color.inkTertiary)
+                    .font(.system(size: 15))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 2)
+    }
+
+    @ViewBuilder
+    private func sourceTag(for product: Product) -> some View {
+        switch product.source {
+        case .ocr:    Text("· Gescannt").foregroundStyle(Color.terra)
+        case .dish:   Text("· Gericht").foregroundStyle(Color.forest)
+        case .manual: Text("· Manuell").foregroundStyle(Color.warmBrown)
+        default:      EmptyView()
         }
     }
 
     // MARK: - Phase 2: Details eingeben
 
     private func detailsView(product: Product) -> some View {
-        Form {
-            Section("Produkt") {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(product.name)
-                            .font(.headline)
-                        Text("\(Int(product.kcalPer100g)) kcal / 100g")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Ändern") {
-                        selectedProduct = nil
-                        searchText = ""
-                    }
-                    .font(.subheadline)
-                }
-            }
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
 
-            Section("Menge") {
-                HStack {
-                    TextField(useMl ? "Milliliter" : "Gramm", text: $gramsText)
-                        .keyboardType(.decimalPad)
-                        .focused($gramsFocused)
-                    Picker("Einheit", selection: $useMl) {
-                        Text("g").tag(false)
-                        Text("ml").tag(true)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    // Product card
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.terra.opacity(0.15))
+                                .frame(width: 44, height: 44)
+                            Text(String(product.name.prefix(1)).uppercased())
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(Color.warmBrown)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(product.name)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Color.inkPrimary)
+                            Text("\(Int(product.kcalPer100g)) kcal / 100g")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.inkSecondary)
+                        }
+                        Spacer()
+                        Button("Ändern") {
+                            selectedProduct = nil
+                            searchText = ""
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.warmBrown)
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 80)
-                }
-                if let g = grams, g > 0 {
-                    let f = g / 100.0
-                    Text("\(Int((product.kcalPer100g * f).rounded())) kcal · \(fmt(product.proteinPer100g * f))g P · \(fmt(product.fatPer100g * f))g F · \(fmt(product.carbsPer100g * f))g KH")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+                    .padding(14)
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.inkDivider, lineWidth: 1))
 
-            Section("Mahlzeit") {
-                Picker("Mahlzeit", selection: $selectedSlot) {
-                    ForEach(MealSlot.allCases) { slot in
-                        Label(slot.rawValue, systemImage: slot.systemImage).tag(slot)
+                    // Amount card
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionLabel(text: "Menge")
+                        VStack(spacing: 0) {
+                            HStack(spacing: 10) {
+                                TextField(useMl ? "Milliliter" : "Gramm", text: $gramsText)
+                                    .keyboardType(.decimalPad)
+                                    .focused($gramsFocused)
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(Color.inkPrimary)
+                                Picker("Einheit", selection: $useMl) {
+                                    Text("g").tag(false)
+                                    Text("ml").tag(true)
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 80)
+                            }
+                            .padding(14)
+
+                            if let g = grams, g > 0 {
+                                Divider().padding(.horizontal, 14)
+                                let f = g / 100.0
+                                HStack {
+                                    macroPreviewPill("\(Int((product.kcalPer100g * f).rounded()))", label: "kcal", color: Color.terra)
+                                    macroPreviewPill("\(fmt(product.proteinPer100g * f))g", label: "P", color: Color.terra)
+                                    macroPreviewPill("\(fmt(product.fatPer100g * f))g", label: "F", color: Color.amber)
+                                    macroPreviewPill("\(fmt(product.carbsPer100g * f))g", label: "KH", color: Color.forest)
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 10)
+                            }
+                        }
+                        .background(Color.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.inkDivider, lineWidth: 1))
                     }
+
+                    // Meal slot card
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionLabel(text: "Mahlzeit")
+                        Picker("Mahlzeit", selection: $selectedSlot) {
+                            ForEach(MealSlot.allCases) { slot in
+                                Label(slot.rawValue, systemImage: slot.systemImage).tag(slot)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                    // Add button
+                    Button {
+                        addEntry()
+                    } label: {
+                        Text("Hinzufügen")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(canAdd ? Color.terra : Color.inkDivider)
+                            .foregroundStyle(.white)
+                            .clipShape(Capsule())
+                            .shadow(color: canAdd ? Color.terra.opacity(0.32) : .clear, radius: 18, x: 0, y: 8)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canAdd)
+                    .animation(.spring(response: 0.25), value: canAdd)
+
+                    Spacer().frame(height: 24)
                 }
-                .pickerStyle(.segmented)
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
             }
         }
-        .navigationTitle("Eintrag hinzufügen")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Eintrag hinzufügen")
+                    .font(.display(18))
+                    .foregroundStyle(Color.inkPrimary)
+            }
             ToolbarItem(placement: .cancellationAction) {
                 Button("Abbrechen") { dismiss() }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Hinzufügen") { addEntry() }
-                    .disabled(!canAdd)
+                    .foregroundStyle(Color.warmBrown)
             }
         }
         .onAppear { gramsFocused = true }
+    }
+
+    private func macroPreviewPill(_ value: String, label: String, color: Color) -> some View {
+        VStack(spacing: 1) {
+            Text(value)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundStyle(Color.inkSecondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Actions

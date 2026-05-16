@@ -5,7 +5,7 @@
       "layers" : [
         {
           "blend-mode" : "normal",
-          "glass" : true,
+          "glass" : false,
           "image-name" : "Image.png",
           "name" : "Image",
           "opacity" : 1,
@@ -23,7 +23,7 @@
         "opacity" : 0.75
       },
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.5
       }
     }

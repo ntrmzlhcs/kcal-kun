@@ -41,57 +41,181 @@ struct ScanConfirmationView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Produkt") {
-                    TextField("Name (Pflichtfeld)", text: $name)
-                }
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
 
-                Section("Nährwerte pro 100 g") {
-                    nutritionField("Kalorien (kcal)", value: $kcal)
-                    nutritionField("Protein (g)", value: $protein)
-                    nutritionField("Fett (g)", value: $fat)
-                    nutritionField("Kohlenhydrate (g)", value: $carbs)
-                }
-
-                Section {
-                    DisclosureGroup("Weitere Nährwerte", isExpanded: $showOptional) {
-                        nutritionField("Ballaststoffe (g)", value: $fiber, required: false)
-                        nutritionField("Zucker (g)", value: $sugar, required: false)
-                        nutritionField("Salz (g)", value: $salt, required: false)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        mascotHeader
+                        formContent
+                        saveButton
+                        Spacer().frame(height: 24)
                     }
+                    .padding(.top, 8)
                 }
             }
-            .navigationTitle("Produkt speichern")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Produkt speichern")
+                        .font(.display(18))
+                        .foregroundStyle(Color.inkPrimary)
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Abbrechen") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Speichern") {
-                        saveAndDismiss()
-                    }
-                    .disabled(!canSave)
+                        .foregroundStyle(Color.warmBrown)
                 }
             }
         }
     }
 
+    // MARK: - Mascot Header
+
+    private var mascotHeader: some View {
+        VStack(spacing: 10) {
+            ZStack(alignment: .topTrailing) {
+                MascotView(size: 90, mood: .smug, tone: .cream, tilt: -4)
+                Text("Gefunden")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.forest)
+                    .clipShape(Capsule())
+                    .offset(x: 8, y: -4)
+            }
+
+            if !name.isEmpty {
+                Text(name)
+                    .font(.display(22))
+                    .foregroundStyle(Color.inkPrimary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+
+            Text("Überprüfe die Nährwerte und speichere das Produkt.")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.inkSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+        }
+        .padding(.top, 12)
+        .padding(.bottom, 4)
+    }
+
+    // MARK: - Form Content
+
+    private var formContent: some View {
+        VStack(spacing: 14) {
+            // Product name card
+            VStack(alignment: .leading, spacing: 8) {
+                SectionLabel(text: "Produkt")
+                VStack(spacing: 0) {
+                    HStack {
+                        TextField("Name (Pflichtfeld)", text: $name)
+                            .font(.system(size: 15))
+                            .foregroundStyle(Color.inkPrimary)
+                    }
+                    .padding(14)
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.inkDivider, lineWidth: 1))
+                }
+            }
+
+            // Core nutrition card
+            VStack(alignment: .leading, spacing: 8) {
+                SectionLabel(text: "Nährwerte pro 100 g")
+                VStack(spacing: 0) {
+                    nutritionRow("Kalorien (kcal)", value: $kcal, required: true, isLast: false)
+                    Divider().padding(.leading, 14)
+                    nutritionRow("Protein (g)", value: $protein, required: true, isLast: false)
+                    Divider().padding(.leading, 14)
+                    nutritionRow("Fett (g)", value: $fat, required: true, isLast: false)
+                    Divider().padding(.leading, 14)
+                    nutritionRow("Kohlenhydrate (g)", value: $carbs, required: true, isLast: true)
+                }
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.inkDivider, lineWidth: 1))
+            }
+
+            // Optional nutrition card
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    withAnimation(.spring(response: 0.3)) { showOptional.toggle() }
+                } label: {
+                    HStack {
+                        SectionLabel(text: "Weitere Nährwerte")
+                        Spacer()
+                        Image(systemName: showOptional ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.inkTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if showOptional {
+                    VStack(spacing: 0) {
+                        nutritionRow("Ballaststoffe (g)", value: $fiber, required: false, isLast: false)
+                        Divider().padding(.leading, 14)
+                        nutritionRow("Zucker (g)", value: $sugar, required: false, isLast: false)
+                        Divider().padding(.leading, 14)
+                        nutritionRow("Salz (g)", value: $salt, required: false, isLast: true)
+                    }
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.inkDivider, lineWidth: 1))
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+    }
+
+    // MARK: - Save Button
+
+    private var saveButton: some View {
+        Button {
+            saveAndDismiss()
+        } label: {
+            Text("Speichern")
+                .font(.system(size: 16, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(canSave ? Color.terra : Color.inkDivider)
+                .foregroundStyle(.white)
+                .clipShape(Capsule())
+                .shadow(color: canSave ? Color.terra.opacity(0.32) : .clear, radius: 18, x: 0, y: 8)
+        }
+        .buttonStyle(.plain)
+        .disabled(!canSave)
+        .padding(.horizontal, 18)
+        .animation(.spring(response: 0.25), value: canSave)
+    }
+
+    // MARK: - Nutrition Row
+
     @ViewBuilder
-    private func nutritionField(_ label: String, value: Binding<String>, required: Bool = true) -> some View {
+    private func nutritionRow(_ label: String, value: Binding<String>, required: Bool, isLast: Bool) -> some View {
         HStack {
             Text(label)
+                .font(.system(size: 14))
+                .foregroundStyle(Color.inkSecondary)
             Spacer()
             TextField(required ? "Pflichtfeld" : "optional", text: value)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
-                .frame(width: 100)
+                .frame(width: 110)
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(
                     required && parseDouble(value.wrappedValue) == nil && !value.wrappedValue.isEmpty
                     ? Color.red
-                    : Color.primary
+                    : Color.terra
                 )
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
     }
 
     private func saveAndDismiss() {

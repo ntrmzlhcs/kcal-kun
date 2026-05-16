@@ -44,47 +44,63 @@ struct StatsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Date navigator
-                    DateNavigator(selectedDate: $selectedDate)
-                        .padding(.horizontal)
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
 
-                    if totals.hasData {
-                        MacroDonutChart(totals: totals)
-                            .padding(.horizontal)
-                        FiberProgressBar(fiber: totals.fiber)
-                            .padding(.horizontal)
-                        WeeklyKcalChart(entries: last7DayEntries, workoutKcals: weeklyWorkoutKcals, profile: profiles.first)
-                            .padding(.horizontal)
-                    }
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 16) {
+                        DateNavigator(selectedDate: $selectedDate)
+                            .padding(.horizontal, 18)
 
-                    if rollingWeights.count >= 2 {
-                        WeightChart(data: rollingWeights)
-                            .padding(.horizontal)
-                    }
+                        if totals.hasData {
+                            MacroDonutChart(totals: totals)
+                                .padding(.horizontal, 18)
+                            FiberProgressBar(fiber: totals.fiber)
+                                .padding(.horizontal, 18)
+                            WeeklyKcalChart(entries: last7DayEntries, workoutKcals: weeklyWorkoutKcals, profile: profiles.first)
+                                .padding(.horizontal, 18)
+                        }
 
-                    if !totals.hasData {
-                        ContentUnavailableView(
-                            "Noch keine Einträge",
-                            systemImage: "chart.pie",
-                            description: Text("Füge Mahlzeiten im Tagebuch hinzu.")
+                        if rollingWeights.count >= 2 {
+                            WeightChart(data: rollingWeights)
+                                .padding(.horizontal, 18)
+                        }
+
+                        if !totals.hasData {
+                            VStack(spacing: 12) {
+                                MascotView(size: 72, mood: .sleep, tone: .beige)
+                                Text("Noch keine Einträge")
+                                    .font(.display(22))
+                                    .foregroundStyle(Color.inkPrimary)
+                                Text("Füge Mahlzeiten im Tagebuch hinzu.")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Color.inkSecondary)
+                            }
+                            .padding(.top, 40)
+                        }
+
+                        NutritionAnalysisCard(
+                            isLoading: isLoadingAnalysis,
+                            analysis: cachedAnalysis,
+                            timestamp: cachedTimestamp,
+                            error: analysisError,
+                            onRefresh: { Task { await runAnalysis() } }
                         )
-                        .padding(.top, 40)
-                    }
+                        .padding(.horizontal, 18)
 
-                    NutritionAnalysisCard(
-                        isLoading: isLoadingAnalysis,
-                        analysis: cachedAnalysis,
-                        timestamp: cachedTimestamp,
-                        error: analysisError,
-                        onRefresh: { Task { await runAnalysis() } }
-                    )
-                    .padding(.horizontal)
+                        Spacer().frame(height: 90)
+                    }
+                    .padding(.top, 8)
                 }
-                .padding(.bottom)
             }
-            .navigationTitle("Statistik")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Statistik")
+                        .font(.display(18))
+                        .foregroundStyle(Color.inkPrimary)
+                }
+            }
         }
         .task {
             rollingWeights = await healthKit.fetchRollingAverageWeights(days: 30)
@@ -101,7 +117,6 @@ extension StatsView {
         analysisError = nil
         do {
             let workoutKcals = await healthKit.fetchWorkoutKcals(forLast: 30)
-            // Prompt auf @MainActor bauen (SwiftData-Modelle sind nicht Sendable)
             let prompt = GeminiService.buildNutritionPrompt(
                 entries: analysisPeriodEntries,
                 workoutKcals: workoutKcals,
@@ -137,58 +152,72 @@ private struct NutritionAnalysisCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("KI-Analyse (30 Tage)")
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 2) {
+                    SectionLabel(text: "KI-Analyse")
+                    Text("30 Tage")
+                        .font(.display(19))
+                        .foregroundStyle(Color.inkPrimary)
+                }
                 Spacer()
                 Button {
                     onRefresh()
                 } label: {
                     Label("Aktualisieren", systemImage: "arrow.clockwise")
-                        .font(.subheadline)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.warmBrown)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.beige)
+                        .clipShape(Capsule())
                 }
+                .buttonStyle(.plain)
                 .disabled(isLoading)
             }
 
             if let label = timestampLabel {
                 Text("Letzte Analyse: \(label)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.inkTertiary)
             }
 
-            Divider()
+            Divider().overlay(Color.inkDivider)
 
             if isLoading {
                 HStack {
                     Spacer()
                     VStack(spacing: 8) {
-                        ProgressView()
+                        ProgressView().tint(Color.terra)
                         Text("Gemini analysiert…")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 13))
+                            .foregroundStyle(Color.inkSecondary)
                     }
                     Spacer()
                 }
                 .padding(.vertical, 8)
             } else if let error {
                 Text(error)
-                    .font(.subheadline)
-                    .foregroundStyle(.orange)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.terra)
             } else if analysis.isEmpty {
                 Text("Tippe auf 'Aktualisieren' für eine Auswertung der letzten 30 Tage.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.inkSecondary)
             } else {
                 let rendered = (try? AttributedString(
                     markdown: analysis,
                     options: .init(interpretedSyntax: .full)
                 )) ?? AttributedString(analysis)
                 Text(rendered)
-                    .font(.subheadline)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.inkPrimary)
                     .lineSpacing(4)
             }
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(18)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
+        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
     }
 }
 
@@ -214,11 +243,10 @@ private struct WeightChart: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Gewichtsverlauf")
-                    .font(.headline)
+                SectionLabel(text: "Gewichtsverlauf")
                 Text("Ø 5 Messungen · 30 Tage")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.inkSecondary)
             }
 
             Chart(chartData) { point in
@@ -227,12 +255,12 @@ private struct WeightChart: View {
                     y: .value("kg", point.kg)
                 )
                 .interpolationMethod(.catmullRom)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.terra)
                 PointMark(
                     x: .value("Datum", point.day),
                     y: .value("kg", point.kg)
                 )
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.terra)
                 .symbolSize(30)
             }
             .chartXAxis {
@@ -245,8 +273,11 @@ private struct WeightChart: View {
             .chartYScale(domain: yMin...yMax)
             .frame(height: 180)
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(18)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
+        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
     }
 }
 
@@ -263,9 +294,9 @@ struct MacroTotals {
 
     var slices: [MacroSlice] {
         [
-            MacroSlice(label: "Protein",        grams: protein, color: .blue),
-            MacroSlice(label: "Kohlenhydrate",  grams: carbs,   color: .orange),
-            MacroSlice(label: "Fett",           grams: fat,     color: .yellow),
+            MacroSlice(label: "Protein",        grams: protein, color: Color.terra),
+            MacroSlice(label: "Kohlenhydrate",  grams: carbs,   color: Color.forest),
+            MacroSlice(label: "Fett",           grams: fat,     color: Color.amber),
         ].filter { $0.grams > 0 }
     }
 }
@@ -298,14 +329,15 @@ private struct MacroDonutChart: View {
 
                 VStack(spacing: 2) {
                     Text("\(Int(totals.kcal))")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.display(34))
+                        .foregroundStyle(Color.inkPrimary)
+                        .monospacedDigit()
                     Text("kcal")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.inkSecondary)
                 }
             }
 
-            // Legend
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 ForEach(totals.slices) { slice in
                     MacroLegendItem(slice: slice)
@@ -313,8 +345,13 @@ private struct MacroDonutChart: View {
             }
             .padding(.horizontal, 8)
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(18)
+        .background(
+            LinearGradient(colors: [Color.beige, Color.cardBackground], startPoint: .topLeading, endPoint: .bottomTrailing)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.10), lineWidth: 1))
+        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.08), radius: 24, x: 0, y: 10)
     }
 }
 
@@ -325,13 +362,14 @@ private struct MacroLegendItem: View {
         HStack(spacing: 8) {
             Circle()
                 .fill(slice.color)
-                .frame(width: 12, height: 12)
+                .frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 1) {
                 Text(slice.label)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.inkSecondary)
                 Text(formatGrams(slice.grams))
-                    .font(.subheadline.bold())
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.inkPrimary)
             }
             Spacer()
         }
@@ -348,44 +386,51 @@ private struct FiberProgressBar: View {
     let fiber: Double
     private let goal: Double = 35.0
 
-    private var color: Color {
+    private var fillColor: Color {
         let ratio = fiber / goal
-        if ratio >= 0.85 { return .green }
-        if ratio >= 0.5  { return .orange }
-        return .red
+        if ratio >= 0.85 { return .forest }
+        if ratio >= 0.5  { return .amber }
+        return .terra
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Ballaststoffe")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    SectionLabel(text: "Ballaststoffe")
+                    Text("Tagesziel 35 g")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.inkSecondary)
+                }
                 Spacer()
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(fiber < 10 ? String(format: "%.1f", fiber) : "\(Int(fiber.rounded()))")
-                        .font(.system(.title3, design: .rounded, weight: .bold))
+                        .font(.display(22))
+                        .foregroundStyle(fillColor)
                     Text("/ \(Int(goal)) g")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.inkSecondary)
                 }
             }
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.secondary.opacity(0.15))
-                        .frame(height: 12)
+                        .fill(Color.inkDivider)
+                        .frame(height: 10)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(color.gradient)
-                        .frame(width: geo.size.width * min(fiber / goal, 1.0), height: 12)
+                        .fill(fillColor)
+                        .frame(width: geo.size.width * min(fiber / goal, 1.0), height: 10)
                         .animation(.spring(duration: 0.4), value: fiber)
                 }
             }
-            .frame(height: 12)
+            .frame(height: 10)
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(18)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
+        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
     }
 }
 
@@ -402,6 +447,7 @@ private struct WeeklyKcalChart: View {
         let kcal: Double
         let effectiveTarget: Double
         let label: String
+        let isToday: Bool
     }
 
     private var chartData: [DayData] {
@@ -423,23 +469,30 @@ private struct WeeklyKcalChart: View {
                 .reduce(0) { $0 + $1.kcal }
             let workout = workoutKcals[day] ?? 0
             let effective = baseTarget > 0 ? baseTarget + workout : 0
-            return DayData(day: day, kcal: kcal, effectiveTarget: effective, label: fmt.string(from: day))
+            let isToday = cal.isDateInToday(day)
+            return DayData(day: day, kcal: kcal, effectiveTarget: effective, label: fmt.string(from: day), isToday: isToday)
         }
     }
-
-    private var hasTarget: Bool { profile != nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Letzte 7 Tage")
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 2) {
+                    SectionLabel(text: "Woche")
+                    Text("Letzte 7 Tage")
+                        .font(.display(19))
+                        .foregroundStyle(Color.inkPrimary)
+                }
                 Spacer()
                 if let p = profile {
                     let base = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
                     Text("Ziel \(Int(base)) kcal")
-                        .font(.caption)
-                        .foregroundStyle(.blue)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.warmBrown)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.beige)
+                        .clipShape(Capsule())
                 }
             }
 
@@ -449,28 +502,35 @@ private struct WeeklyKcalChart: View {
                         x: .value("Tag", d.label),
                         y: .value("kcal", d.kcal)
                     )
-                    .foregroundStyle(barColor(for: d).gradient)
-                    .cornerRadius(4)
+                    .foregroundStyle(barColor(for: d))
+                    .cornerRadius(6)
                 }
                 if let p = profile {
                     let base = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
                     RuleMark(y: .value("Ziel", base))
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5]))
-                        .foregroundStyle(.blue.opacity(0.8))
+                        .foregroundStyle(Color.warmBrown.opacity(0.6))
                 }
             }
             .chartXAxis {
-                AxisMarks { _ in AxisValueLabel() }
+                AxisMarks { _ in
+                    AxisValueLabel()
+                        .foregroundStyle(Color.inkSecondary)
+                }
             }
             .frame(height: 160)
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(18)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
+        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
     }
 
     private func barColor(for d: DayData) -> Color {
-        guard d.effectiveTarget > 0 else { return .orange }
-        return d.kcal > d.effectiveTarget ? .red : .green
+        if d.isToday { return .terra }
+        guard d.effectiveTarget > 0 else { return .beige }
+        return d.kcal > d.effectiveTarget ? Color.terra.opacity(0.7) : Color.forest.opacity(0.7)
     }
 }
 
@@ -496,15 +556,19 @@ struct DateNavigator: View {
                 selectedDate = Calendar.current.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.title3)
-                    .padding(.horizontal)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.warmBrown)
+                    .frame(width: 36, height: 36)
+                    .background(Color.cardBackground)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.inkDivider, lineWidth: 1))
             }
 
             Spacer()
 
             Text(displayLabel)
-                .font(.headline)
-                .foregroundStyle(isToday ? .primary : .secondary)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(isToday ? Color.inkPrimary : Color.inkSecondary)
 
             Spacer()
 
@@ -512,11 +576,15 @@ struct DateNavigator: View {
                 selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
             } label: {
                 Image(systemName: "chevron.right")
-                    .font(.title3)
-                    .padding(.horizontal)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.warmBrown)
+                    .frame(width: 36, height: 36)
+                    .background(Color.cardBackground)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.inkDivider, lineWidth: 1))
             }
         }
-        .buttonStyle(.borderless)
-        .padding(.vertical, 8)
+        .buttonStyle(.plain)
+        .padding(.vertical, 4)
     }
 }

@@ -26,12 +26,18 @@
 		97D3B417A1EBC9DC860B88E7 /* DataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A170846B94D539D35D4A200 /* DataSeeder.swift */; };
 		A646721F222785D399D38350 /* CameraPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70568DE967124998EBF126B /* CameraPickerView.swift */; };
 		AED612A427A92D4620AF451F /* ScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */; };
+		AA3333333333333333333333 /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* InstrumentSerif-Regular.ttf */; };
+		AA4444444444444444444444 /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* InstrumentSerif-Italic.ttf */; };
 		B500BCDF23564B05882482C5 /* BLVFoods.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BA0BC210EE545E484BC475F /* BLVFoods.json */; };
 		CCA204949C5F482AA6BE6C82 /* ManualProductEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FA4D891D644D3B9B9DBD3F /* ManualProductEntryView.swift */; };
 		CDBDD8F4D7D12C1778637450 /* ProductSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BD64646A6A591F52455AA4 /* ProductSource.swift */; };
 		D029C134FB694E68B52B30EC /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B0FFAF571247E7B4FD4965 /* UserProfile.swift */; };
 		EDBA34CDE6CD6AA72FB81B54 /* AddEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83923A87406A6E661B0C9A45 /* AddEntryView.swift */; };
 		F61AE35088B1D34E48A8C7CC /* ScanConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */; };
+		AB1100000000000000000001 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000001 /* DesignSystem.swift */; };
+		AB1100000000000000000002 /* MascotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000002 /* MascotView.swift */; };
+		AB1100000000000000000003 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000003 /* OnboardingView.swift */; };
+		AB1100000000000000000004 /* ImagePickerWithCrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000004 /* ImagePickerWithCrop.swift */; };
 		F6A9CB2A74B38F4E94D088F9 /* KcalKunApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */; };
 		F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */; };
 		FBE064D05FADB5933DB36ABA /* Product.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA34AC6D29608E2EEC481963 /* Product.swift */; };
@@ -54,10 +60,15 @@
 		5B3BA49B2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Kcal-Kun_Icon.icon"; sourceTree = "<group>"; };
 		5BAB313F2F7ED4120047A624 /* DishScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DishScannerViewModel.swift"; sourceTree = "<group>"; };
 		5BAB31412F7ED4280047A624 /* DishScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DishScanResultView.swift"; sourceTree = "<group>"; };
+		AB2200000000000000000001 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		AB2200000000000000000002 /* MascotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotView.swift; sourceTree = "<group>"; };
+		AB2200000000000000000003 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunApp.swift; sourceTree = "<group>"; };
 		64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreloadedFoods.json; sourceTree = "<group>"; };
 		64B1F47F05D1CDB3B494A50D /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
 		6A170846B94D539D35D4A200 /* DataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSeeder.swift; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* InstrumentSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Regular.ttf"; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Italic.ttf"; sourceTree = "<group>"; };
 		6BA0BC210EE545E484BC475F /* BLVFoods.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = BLVFoods.json; sourceTree = "<group>"; };
 		80B0FFAF571247E7B4FD4965 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		82BF815B21651C3BCA0BF6CE /* MealSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealSlot.swift; sourceTree = "<group>"; };
@@ -75,6 +86,7 @@
 		DE9768C332524C50A6436480 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		E04721CCE791BD5C060CF338 /* ScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerViewModel.swift; sourceTree = "<group>"; };
 		E70568DE967124998EBF126B /* CameraPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPickerView.swift; sourceTree = "<group>"; };
+		AB2200000000000000000004 /* ImagePickerWithCrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePickerWithCrop.swift; sourceTree = "<group>"; };
 		E73498C8E756F40E77C0ACB7 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 		EA6672F87448E0513470FD6F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		FA9CF46334E244489606E48F /* KcalProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalProgressView.swift; sourceTree = "<group>"; };
@@ -92,6 +104,8 @@
 				47FA4D891D644D3B9B9DBD3F /* ManualProductEntryView.swift */,
 				E70568DE967124998EBF126B /* CameraPickerView.swift */,
 				13FB9D1CD6D4BD43487C0D59 /* ScanConfirmationView.swift */,
+				AB2200000000000000000002 /* MascotView.swift */,
+				AB2200000000000000000004 /* ImagePickerWithCrop.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -114,6 +128,7 @@
 				8D46DE566AE2DDEC54645227 /* LibraryView.swift */,
 				BF2D0DE8B14125B56D0D065A /* ScannerView.swift */,
 				B290406F36C8A8745A392294 /* StatsView.swift */,
+				AB2200000000000000000003 /* OnboardingView.swift */,
 				068BA48B2C1B2113315D033B /* Components */,
 			);
 			path = Views;
@@ -132,12 +147,22 @@
 			path = docs;
 			sourceTree = "<group>";
 		};
+		AA5555555555555555555555 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				AA1111111111111111111111 /* InstrumentSerif-Regular.ttf */,
+				AA2222222222222222222222 /* InstrumentSerif-Italic.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		4F492F84DDA28536356B8C59 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 				564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */,
 				64731FE5A8ACE599D70943D1 /* PreloadedFoods.json */,
 				6BA0BC210EE545E484BC475F /* BLVFoods.json */,
+				AA5555555555555555555555 /* Fonts */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -187,6 +212,7 @@
 				29153459687B1CD24A67832E /* Info.plist */,
 				6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */,
 				EA6672F87448E0513470FD6F /* MainTabView.swift */,
+				AB2200000000000000000001 /* DesignSystem.swift */,
 				71BBCC43A8E4C46FD9B3A309 /* Models */,
 				4F492F84DDA28536356B8C59 /* Resources */,
 				09757D9E7B6A9BC857EA9446 /* Services */,
@@ -271,6 +297,8 @@
 				FC1BDC657491D8B89330D194 /* PreloadedFoods.json in Resources */,
 				5B3BA49C2F7C51A200C9EA96 /* Kcal-Kun_Icon.icon in Resources */,
 				B500BCDF23564B05882482C5 /* BLVFoods.json in Resources */,
+				AA3333333333333333333333 /* InstrumentSerif-Regular.ttf in Resources */,
+				AA4444444444444444444444 /* InstrumentSerif-Italic.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +313,7 @@
 				EDBA34CDE6CD6AA72FB81B54 /* AddEntryView.swift in Sources */,
 				CCA204949C5F482AA6BE6C82 /* ManualProductEntryView.swift in Sources */,
 				A646721F222785D399D38350 /* CameraPickerView.swift in Sources */,
+				AB1100000000000000000004 /* ImagePickerWithCrop.swift in Sources */,
 				7009D487EBA549A3A0411A2A /* HealthKitService.swift in Sources */,
 				97D3B417A1EBC9DC860B88E7 /* DataSeeder.swift in Sources */,
 				5B391E892F7D15ED00E92EFB /* MealScannerViewModel.swift in Sources */,
@@ -306,6 +335,9 @@
 				4737277438E3A15E8E28A487 /* ScannerView.swift in Sources */,
 				AED612A427A92D4620AF451F /* ScannerViewModel.swift in Sources */,
 				6CA8EDB8C6832A0303462876 /* StatsView.swift in Sources */,
+				AB1100000000000000000001 /* DesignSystem.swift in Sources */,
+				AB1100000000000000000002 /* MascotView.swift in Sources */,
+				AB1100000000000000000003 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -330,7 +362,7 @@
 		4535A2E45BD0B54C7F0D3F96 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "Kcal-Kun_Icon";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "Kcal-Kun/Kcal-Kun.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -347,7 +379,7 @@
 		58D99F822A4580916DC72F95 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "Kcal-Kun_Icon";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "Kcal-Kun/Kcal-Kun.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;

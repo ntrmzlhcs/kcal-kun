@@ -6,6 +6,8 @@ struct KcalKunApp: App {
     let modelContainer: ModelContainer
     @State private var healthKit = HealthKitService()
 
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+
     init() {
         do {
             modelContainer = try ModelContainer(for: Product.self, DiaryEntry.self, UserProfile.self)
@@ -16,11 +18,18 @@ struct KcalKunApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .task {
-                    await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
-                    await healthKit.requestAuthorizationAndFetch()
-                }
+            if hasCompletedOnboarding {
+                MainTabView()
+                    .task {
+                        await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
+                        await healthKit.requestAuthorizationAndFetch()
+                    }
+            } else {
+                OnboardingView()
+                    .task {
+                        await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
+                    }
+            }
         }
         .modelContainer(modelContainer)
         .environment(healthKit)

@@ -26,6 +26,11 @@
 	<string>Kcal-Kun verwendet die Kamera, um Nährwerttabellen auf Verpackungen zu scannen.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Kcal-Kun liest Bewegungskalorien aus Workouts für die Tagesübersicht.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>InstrumentSerif-Regular.ttf</string>
+		<string>InstrumentSerif-Italic.ttf</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
