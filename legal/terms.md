@@ -25,7 +25,7 @@ Diese Nutzungsbedingungen gelten für die Nutzung der iOS-App „Kcal-Kun". Mit 
 
 Die KI-Funktionen der App (OCR-Scanner für Nährwerttabellen, Gericht-Analyse, KI-Ernährungsanalyse) erfordern **einen eigenen, persönlichen Google-Gemini-API-Key**.
 
-- **Anleitung:** Die App enthält eine Anleitung, wie du einen Key kostenlos in Google AI Studio erstellst.
+- **Anleitung:** Die App enthält eine Anleitung, wie du einen Key kostenlos in Google AI Studio erstellst (mit Tageslimit im Free-Tier — für normale Privatnutzung reicht das in der Regel).
 - **Eigene Kosten:** Allfällige Kosten durch deine Nutzung des Google-Gemini-Service trägst du selbst, gemäß deinen eigenen Google-Cloud-Konditionen.
 - **Eigene Verantwortung:** Du bist verantwortlich für die sichere Verwahrung deines API-Keys und die Einhaltung der Nutzungsbedingungen von Google.
 - **Keine Verantwortung des App-Anbieters:** Der App-Anbieter haftet nicht für Kosten, Ausfälle, Datenschutzprobleme oder andere Sachverhalte, die im Verhältnis zwischen dir und Google entstehen.
