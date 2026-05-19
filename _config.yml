@@ -1,0 +1,6 @@
+title: Kcal-Kun
+description: Cozy Kalorientagebuch – Datenschutz, Impressum & AGB
+markdown: kramdown
+exclude:
+  - README.md
+  - .gitignore
