@@ -7,7 +7,7 @@ layout: default
 
 **Stand:** 2026-05-18
 **App:** Kcal-Kun (iOS)
-**Anbieter:** Martin Schulz (Privatperson), [Adresse], [Email]
+**Anbieter:** Martin Schulz (Privatperson), Pfingstweidstrasse 106a, 8005 Zürich, Schweiz · martinschulz.privat@gmail.com
 
 ---
 
@@ -114,7 +114,7 @@ Kcal-Kun verwendet **keine** Cookies, **keine** Tracking-Tools, **keine** Werbe-
 
 ## 8. Kontakt
 
-Für Fragen zum Datenschutz: **[Email]**
+Für Fragen zum Datenschutz: **martinschulz.privat@gmail.com**
 
 ---
 

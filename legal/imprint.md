@@ -10,9 +10,10 @@ layout: default
 ## Anbieter
 
 **Martin Schulz**
+Pfingstweidstrasse 106a
 8005 Zürich, Schweiz
 
-**Email:** kcal.kun.ch@gmail.com
+**Email:** martinschulz.privat@gmail.com
 
 ## Rechtliche Einordnung
 
