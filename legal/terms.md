@@ -20,6 +20,7 @@ Diese Nutzungsbedingungen gelten für die Nutzung der iOS-App „Kcal-Kun". Mit 
 - **Preis:** einmalig CHF 4.90 (oder Äquivalent in lokaler Währung)
 - **Vertragspartner:** Der Kaufvertrag kommt zwischen dir und Apple zustande (über den App Store). Der Anbieter (Martin Schulz) ist Apple's Zulieferer und steht in keiner direkten Vertragsbeziehung zum End-Kunden.
 - **Apple's Bedingungen:** Für die Kauf- und Rückgabeabwicklung gelten Apple's Allgemeine Geschäftsbedingungen.
+- **Widerrufsrecht:** Da der Kauf vollständig über Apples App Store abgewickelt wird, gelten für Widerruf oder Rückerstattungen ausschließlich die Richtlinien von Apple. Verbraucherinnen und Verbraucher aus der EU/EWR müssen sich für Rückerstattungsansprüche direkt an den Apple Support wenden ([reportaproblem.apple.com](https://reportaproblem.apple.com)).
 
 ## 3. Eigener Google-Gemini-API-Key erforderlich
 
@@ -34,15 +35,15 @@ Die KI-Funktionen der App (OCR-Scanner für Nährwerttabellen, Gericht-Analyse, 
 
 > ⚠️ **Wichtig:** Alle KI-Funktionen der App liefern **Schätzungen und Hinweise**, keine medizinischen oder diätetischen Empfehlungen.
 
-### 4.1 OCR-Scanner für Nährwerttabellen (~5% Genauigkeit)
+### 4.1 OCR-Scanner für Nährwerttabellen (~95% Genauigkeit)
 
-- Die KI kann Werte falsch erkennen, besonders bei verwackelten Fotos, schlechter Beleuchtung oder ungewöhnlichen Tabellen-Layouts.
+- Die KI-Erkennung dient der Komfort-Eingabe und kann eine **Fehlertoleranz von ca. 5%** aufweisen — besonders bei verwackelten Fotos, schlechter Beleuchtung oder ungewöhnlichen Tabellen-Layouts.
 - Du solltest die extrahierten Werte vor dem Speichern überprüfen und gegebenenfalls korrigieren.
 - Der Anbieter haftet nicht für falsch erkannte Werte oder darauf basierende Entscheidungen.
 
-### 4.2 Gericht-Analyse aus Foto (~20–35% Genauigkeit)
+### 4.2 Gericht-Analyse aus Foto (Abweichungen ±20–35%)
 
-- Größere Unsicherheit als beim Etiketten-Scan — die KI schätzt anhand sichtbarer Komponenten.
+- Diese Funktion liefert reine **Schätzungen** — Erfahrungswerte zeigen Abweichungen von 20–35% vom tatsächlichen Wert.
 - Versteckte Zutaten (Öl, Butter, Saucen, Toppings) sind besonders fehleranfällig.
 - Portionsgrößen werden geschätzt und können erheblich abweichen.
 - Vor dem Speichern Werte prüfen und gegebenenfalls anpassen.
@@ -70,9 +71,13 @@ Der Anbieter haftet nicht für gesundheitliche, finanzielle oder andere Schäden
 
 Die App benötigt keinen Account beim Anbieter. Lediglich für den Kauf über den App Store ist eine Apple-ID erforderlich.
 
-## 7. Anbieter-Status
+## 7. Anbieter-Status & geltendes Verbraucherrecht
 
-Diese App wird von einer **Privatperson** zur Verfügung gestellt. Der Anbieter handelt nicht im Rahmen einer gewerblichen oder beruflichen Tätigkeit. Falls du Fragen oder Probleme hast, schreibe uns gerne eine Email — wir versuchen, in angemessener Zeit zu antworten, können aber keine Service-Garantien wie bei kommerziellen Anbietern geben.
+Diese App wird von einer **Privatperson** zur Verfügung gestellt. Der Anbieter handelt nicht im Rahmen einer hauptberuflichen gewerblichen Tätigkeit.
+
+Da die App jedoch über den Apple App Store auch in der EU/EWR zum Kauf angeboten wird, gelten für den Verkauf an Konsumentinnen und Konsumenten in der EU/EWR die **zwingenden Verbraucherschutzbestimmungen** des jeweiligen Mitgliedsstaates (Marktortprinzip). Diese Bestimmungen haben Vorrang vor anderslautenden Klauseln in diesen AGB.
+
+Falls du Fragen oder Probleme hast, schreibe uns gerne eine Email — wir versuchen, in angemessener Zeit zu antworten, können aber keine Service-Garantien wie bei kommerziellen Anbietern geben.
 
 ## 8. Updates der AGB
 

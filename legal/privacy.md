@@ -7,7 +7,7 @@ layout: default
 
 **Stand:** 2026-05-18
 **App:** Kcal-Kun (iOS)
-**Anbieter:** Martin Schulz (Privatperson), 8005 Zürich, kcal.kun.ch@gmail.com
+**Anbieter:** Martin Schulz (Privatperson), [Adresse], [Email]
 
 ---
 
@@ -63,7 +63,16 @@ Es gibt drei Funktionen, die Daten an Google Gemini senden — **alle direkt von
 
 ### 4.1 Google LLC (Gemini API)
 
-Wenn du die KI-Funktionen nutzt, baust du eine direkte Verbindung mit Google's Servern auf, authentifiziert über deinen eigenen API-Key. Google verarbeitet deine Daten gemäß deren eigener Datenschutzrichtlinie und den Bedingungen deines Google-Cloud-Accounts.
+Wenn du die KI-Funktionen nutzt, baut die App eine direkte Verbindung mit Google's Servern auf, authentifiziert über deinen eigenen API-Key.
+
+**Wichtiger Hinweis — Free Tier vs. Paid Tier:**
+
+- **Google AI Studio Free Tier (kostenlos):** Laut Google's eigenen Nutzungsbedingungen werden eingereichte Daten (Texte, Fotos, Ernährungsdaten) **gespeichert, durch menschliche Reviewer geprüft und zur Verbesserung sowie zum Training von Google-Produkten verwendet**. Da Kcal-Kun Gesundheitsdaten verarbeitet, raten wir **dringend vom Free Tier ab**.
+- **Google AI Studio Paid Tier (Pay-as-you-go, mit Abrechnungskonto):** Daten werden laut Google **nicht zum Training verwendet** und vertraulich behandelt. Die Kosten sind für die typische Nutzung sehr gering (wenige Cent pro Monat).
+
+Da die Datenübermittlung direkt über deinen persönlichen API-Key erfolgt, **liegt die Wahl des Datenschutz-Niveaus und die Verantwortung dafür vollständig bei dir**. Die App kann das Tier-Level deines Keys nicht erkennen oder beeinflussen.
+
+**HealthKit-Daten:** Die Übermittlung von HealthKit-Daten (Gewicht, Workouts) an Google erfolgt **ausschließlich**, wenn du die KI-Ernährungsanalyse im Statistik-Tab **aktiv per Knopfdruck startest**. Ohne diese Aktion bleibt HealthKit lokal auf deinem Gerät.
 
 - **Google Privacy Policy:** [policies.google.com/privacy](https://policies.google.com/privacy)
 - **Gemini API Terms:** [ai.google.dev/terms](https://ai.google.dev/terms)
@@ -105,7 +114,7 @@ Kcal-Kun verwendet **keine** Cookies, **keine** Tracking-Tools, **keine** Werbe-
 
 ## 8. Kontakt
 
-Für Fragen zum Datenschutz: **kcal.kun.ch@gmail.com**
+Für Fragen zum Datenschutz: **[Email]**
 
 ---
 
