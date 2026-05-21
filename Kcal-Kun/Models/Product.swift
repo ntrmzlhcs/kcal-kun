@@ -18,6 +18,10 @@ final class Product {
     var isFavorite: Bool = false
     var createdAt: Date
     var imageData: Data?
+    /// EAN-13/UPC-Barcode für Produkte aus Open Food Facts oder vom User
+    /// nachträglich erfasst (über OCR/Manuell-Fallback nach Not-Found-Scan).
+    /// Ermöglicht beim erneuten Scannen denselben Eintrag wiederzuverwenden.
+    var barcode: String?
 
     @Relationship(deleteRule: .nullify, inverse: \DiaryEntry.product)
     var entries: [DiaryEntry] = []
@@ -37,7 +41,8 @@ final class Product {
         source: ProductSource,
         isFavorite: Bool = false,
         createdAt: Date = Date(),
-        imageData: Data? = nil
+        imageData: Data? = nil,
+        barcode: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -54,5 +59,6 @@ final class Product {
         self.isFavorite = isFavorite
         self.createdAt = createdAt
         self.imageData = imageData
+        self.barcode = barcode
     }
 }

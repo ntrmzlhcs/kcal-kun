@@ -39,7 +39,7 @@ enum GeminiServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingApiKey:
-            return "API-Key fehlt. Bitte Secrets.xcconfig prüfen."
+            return "Gemini-API-Key fehlt. Geh ins Profil → KI-Setup, um deinen Key einzurichten."
         case .noLabelDetected:
             return "Kein Nährwerttisch erkannt. Foto wiederholen oder manuell eingeben."
         case .noMealDetected:
@@ -60,6 +60,12 @@ enum GeminiServiceError: LocalizedError {
 
 struct GeminiService {
     static let modelName = "gemini-2.5-flash"
+
+    /// DoS-Schutz: maximale akzeptierte Response-Grösse. Typische Gemini-Response
+    /// ist 5–15 KB; 500 KB ist 30× generös und deckt alle Edge-Cases ab. Bei
+    /// einer manipulierten Antwort (z. B. via Man-in-the-Middle) verhindert
+    /// dies Memory-Exhaustion.
+    private static let maxResponseBytes = 500_000
 
     private static let extractionPrompt = """
         You are a nutrition data extraction assistant.
@@ -83,9 +89,8 @@ struct GeminiService {
         """
 
     static func extractNutrition(from jpegData: Data) async throws -> NutritionScanResult {
-        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
-              !apiKey.isEmpty,
-              apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        guard let apiKey = APIKeyService.getKey(),
+              !apiKey.isEmpty
         else {
             throw GeminiServiceError.missingApiKey
         }
@@ -140,12 +145,16 @@ struct GeminiService {
             }
         }
 
+        guard data.count < maxResponseBytes else {
+            throw GeminiServiceError.invalidResponse
+        }
+
         return try parseResponse(data)
     }
 
     static func analyzeMeal(from jpegData: Data, blvNames: [String]) async throws -> [MealRawComponent] {
-        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
-              !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        guard let apiKey = APIKeyService.getKey(),
+              !apiKey.isEmpty
         else { throw GeminiServiceError.missingApiKey }
 
         let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
@@ -197,6 +206,10 @@ struct GeminiService {
             }
         }
 
+        guard data.count < maxResponseBytes else {
+            throw GeminiServiceError.invalidResponse
+        }
+
         struct GeminiAPIResponse: Decodable {
             struct Candidate: Decodable {
                 struct Content: Decodable {
@@ -221,8 +234,8 @@ struct GeminiService {
     }
 
     static func analyzeDish(from jpegData: Data) async throws -> DishAnalysisResult {
-        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
-              !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        guard let apiKey = APIKeyService.getKey(),
+              !apiKey.isEmpty
         else { throw GeminiServiceError.missingApiKey }
 
         let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
@@ -309,15 +322,15 @@ struct GeminiService {
     }
 
     static func analyzeNutrition(prompt: String) async throws -> String {
-        guard let apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String,
-              !apiKey.isEmpty, apiKey != "DEIN_GEMINI_API_KEY_HIER"
+        guard let apiKey = APIKeyService.getKey(),
+              !apiKey.isEmpty
         else { throw GeminiServiceError.missingApiKey }
 
         let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
         guard let url = URL(string: urlString) else { throw GeminiServiceError.invalidResponse }
         let body: [String: Any] = [
             "contents": [["parts": [["text": prompt]]]],
-            "generationConfig": ["temperature": 0.4]
+            "generationConfig": ["temperature": 0.4, "responseMimeType": "application/json"]
         ]
 
         var request = URLRequest(url: url)
@@ -385,13 +398,24 @@ struct GeminiService {
 
         var profileText: String
         if let p = profile {
-            let goalLabel = p.goalType == .deficit ? "Kaloriendefizit" : "Massephase"
-            let target    = Int(p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta)
+            let goalLabel: String = switch p.goalType {
+            case .deficit:     "Kaloriendefizit"
+            case .maintenance: "Gewicht halten"
+            case .surplus:     "Massephase"
+            }
+            let targetKcal: Double = switch p.goalType {
+            case .deficit:     p.bmr - p.kcalDelta
+            case .maintenance: p.bmr
+            case .surplus:     p.bmr + p.kcalDelta
+            }
+            let target     = Int(targetKcal)
             profileText = """
             - Grösse: \(Int(p.heightCm)) cm, Gewicht: \(String(format: "%.1f", p.weightKg)) kg
             - Grundumsatz (BMR): \(Int(p.bmr)) kcal
-            - Ziel: \(goalLabel), Delta: \(Int(p.kcalDelta)) kcal/Tag
+            - Ziel: \(goalLabel) (\(p.goalType.displayName)), Delta: \(Int(p.kcalDelta)) kcal/Tag
             - Effektives Tagesziel (ohne Bewegung): \(target) kcal
+            - Ernährungsstil: \(p.dietStyle.label) (\(p.dietStyle.splitLabel))
+            - Makro-Ziele: Protein \(Int(p.proteinGoal(kcal: targetKcal)))g · KH \(Int(p.carbGoal(kcal: targetKcal)))g · Fett \(Int(p.fatGoal(kcal: targetKcal)))g
             """
             if let bf = p.bodyFatPercent {
                 profileText += "\n- Körperfettanteil: \(String(format: "%.1f", bf)) %"
@@ -411,7 +435,7 @@ struct GeminiService {
             let days30 = cal.dateComponents([.day], from: first.key, to: last.key).day ?? 0
             var lines  = sortedWeights.map { "\(fmt.string(from: $0.key)): \(String(format: "%.1f", $0.value)) kg" }.joined(separator: "\n")
             lines += "\nTrend: \(String(format: "%.1f", first.value)) kg → \(String(format: "%.1f", last.value)) kg (\(sign)\(String(format: "%.1f", delta)) kg über \(days30) Tage)"
-            weightSection = "\n\nGEWICHTSVERLAUF (Ø 5 Messungen):\n\(lines)"
+            weightSection = "\n\nGEWICHTSVERLAUF (Ø 7 Messungen):\n\(lines)"
         }
 
         // Ältere 23 Tage (Übersicht, ohne Produktliste)
@@ -479,14 +503,51 @@ struct GeminiService {
 
         Ø letzte 7 Tage: \(recentAvgKcal) kcal Ernährung/Tag | \(recentAvgWorkout) kcal Workout/Tag | Tage mit Einträgen: \(recentWithEntries)/7 | Tage mit Workout: \(recentWithWorkout)/7
 
-        Analysiere auf Deutsch mit Markdown-Formatierung (fett für Schlüsselbegriffe):
-        1. **Gewichtsverlauf & Energiebilanz**: Trend, Konsistenz mit Kalorienziel über 30 Tage
-        2. **Vergleich letzte 7 Tage vs. Tage 8–30**: Verbesserungen oder Verschlechterungen in Kalorien, Makros, Konsistenz
-        3. **Makronährstoffqualität**: Verteilung, Protein-Adequacy, Ballaststoffe
-        4. **Lebensmittelqualität**: Verarbeitungsgrad, Vielfalt, Nährstoffdichte
-        5. **Bewegungsverhalten**: Frequenz, Einfluss auf Energiebilanz
-        6. **Drei konkrete Mahlzeitenvorschläge** passend zu meinen bisherigen Gewohnheiten, die Ernährungslücken schliessen — je mit Portionsgrösse und geschätzten Nährwerten
-        Sei direkt und präzise. Keine allgemeinen Floskeln.
+        Antworte ausschliesslich mit validem JSON (kein Text davor/danach):
+        {
+          "sections": [
+            {
+              "id": "energy",
+              "title": "Energiebilanz & Trend",
+              "highlight": "<max. 40 Zeichen: 1 zentrale Erkenntnis>",
+              "body": "<2–4 Sätze. Beziehe Gewichtstrend, Zieltyp (\(profile?.goalType.displayName ?? "unbekannt")) und Tagesziel ein.>"
+            },
+            {
+              "id": "comparison",
+              "title": "Letzte 7 vs. 30 Tage",
+              "highlight": "<Verbesserung oder Verschlechterung in 1 Phrase>",
+              "body": "<Vergleich Kalorien, Makros, Konsistenz. Beziehe den Ernährungsstil und die Makro-Ziele ein.>"
+            },
+            {
+              "id": "macros",
+              "title": "Makros & Protein",
+              "highlight": "<Status in 1 Phrase>",
+              "body": "<Protein-Adequacy vs. Ziel, Kohlenhydrat- und Fettqualität, Ballaststoffe, Bezug auf Ernährungsstil-Splits.>"
+            },
+            {
+              "id": "movement",
+              "title": "Bewegung",
+              "highlight": "<Frequenz oder Einfluss kurz>",
+              "body": "<Workout-Frequenz, Einfluss auf Energiebilanz, Eat-back-Kalorien.>"
+            },
+            {
+              "id": "foodquality",
+              "title": "Lebensmittelqualität",
+              "highlight": "<1 Schlagwort>",
+              "body": "<Verarbeitungsgrad, Vielfalt, Nährstoffdichte in 2–3 Sätzen.>"
+            },
+            {
+              "id": "meals",
+              "title": "Mahlzeitenvorschläge",
+              "meals": [
+                { "name": "<Name>", "portions": "<Menge>", "macros": "<P/KH/F · kcal>" },
+                { "name": "<Name>", "portions": "<Menge>", "macros": "<P/KH/F · kcal>" },
+                { "name": "<Name>", "portions": "<Menge>", "macros": "<P/KH/F · kcal>" }
+              ]
+            }
+          ]
+        }
+        Ersetze alle <...>-Platzhalter durch echte Werte. Sei direkt, präzise. Keine Floskeln. Sprache: Deutsch.
         """
     }
 

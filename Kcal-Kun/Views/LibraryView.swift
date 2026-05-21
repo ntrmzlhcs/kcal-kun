@@ -7,6 +7,8 @@ struct LibraryView: View {
 
     @State private var searchText = ""
     @State private var showManualEntry = false
+    @State private var selectedProduct: Product? = nil
+    @Environment(\.coachmarkDemoMode) private var coachmarkDemo
 
     private var favorites: [Product] {
         let base = allProducts.filter { $0.isFavorite }
@@ -15,12 +17,34 @@ struct LibraryView: View {
     }
 
     private var myProducts: [Product] {
-        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual || $0.source == .dish }
+        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual || $0.source == .dish || $0.source == .barcode }
         guard !searchText.isEmpty else { return base }
         return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
 
+    /// BLV-/Preloaded-Produkte, die zur aktuellen Suche passen.
+    /// Nur sichtbar wenn aktiv gesucht wird; auf 50 Treffer begrenzt.
+    private var blvSearchResults: [Product] {
+        guard !searchText.isEmpty else { return [] }
+        return Array(
+            allProducts
+                .filter {
+                    ($0.source == .blvApi || $0.source == .preloaded)
+                    && !$0.isFavorite
+                    && $0.name.localizedCaseInsensitiveContains(searchText)
+                }
+                .prefix(50)
+        )
+    }
+
     private var isEmpty: Bool { favorites.isEmpty && myProducts.isEmpty }
+
+    private var hasNoResults: Bool {
+        !searchText.isEmpty
+        && favorites.isEmpty
+        && myProducts.isEmpty
+        && blvSearchResults.isEmpty
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,6 +59,11 @@ struct LibraryView: View {
                     }
                 }
             }
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Produkt suchen"
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -47,10 +76,15 @@ struct LibraryView: View {
                         Image(systemName: "plus")
                             .foregroundStyle(Color.warmBrown)
                     }
+                    .accessibilityLabel("Produkt manuell erfassen")
                 }
             }
             .sheet(isPresented: $showManualEntry) {
                 ManualProductEntryView()
+            }
+            .sheet(item: $selectedProduct) { product in
+                ProductDetailView(product: product)
+                    .presentationDetents([.large])
             }
         }
     }
@@ -111,10 +145,24 @@ struct LibraryView: View {
 
     private var productList: some View {
         List {
-            if !favorites.isEmpty {
+            if coachmarkDemo {
+                // Während der Tour Demo-Favoriten zeigen statt echter Daten
+                Section {
+                    ForEach(Array(CoachmarkDemoData.demoFavorites.enumerated()), id: \.element.id) { idx, fav in
+                        demoFavoriteRow(fav)
+                            .coachmarkTargetIf(idx == 0, .libraryFavorites)
+                    }
+                } header: {
+                    SectionLabel(text: "Favoriten")
+                        .padding(.top, 4)
+                }
+                .listRowBackground(Color.cardBackground)
+                .listRowSeparatorTint(Color.inkDivider)
+            } else if !favorites.isEmpty {
                 Section {
                     ForEach(favorites) { product in
                         productRow(product)
+                            .coachmarkTargetIf(product.id == favorites.first?.id, .libraryFavorites)
                     }
                 } header: {
                     SectionLabel(text: "Favoriten")
@@ -125,7 +173,12 @@ struct LibraryView: View {
             }
 
             Section {
-                if myProducts.isEmpty {
+                if coachmarkDemo {
+                    // Demo-Items mit Mix aus 3 source-Tags (OCR / Manuell / Gericht)
+                    ForEach(CoachmarkDemoData.demoMyProducts) { demo in
+                        demoMyProductRow(demo)
+                    }
+                } else if myProducts.isEmpty {
                     HStack {
                         MascotView(size: 24, mood: .think, tone: .beige)
                         Text("Noch keine gescannten oder manuellen Produkte.")
@@ -133,9 +186,18 @@ struct LibraryView: View {
                             .foregroundStyle(Color.inkSecondary)
                     }
                     .padding(.vertical, 8)
+                    // Fallback: wenn weder Favoriten noch Meine Produkte → Section-Header
+                    // ist das einzige Spotlight-Target
+                    .coachmarkTargetIf(favorites.isEmpty, .libraryFavorites)
                 } else {
                     ForEach(myProducts) { product in
                         productRow(product)
+                            // Fallback: wenn keine Favoriten existieren, erste Meine-Produkte-Row
+                            // markieren
+                            .coachmarkTargetIf(
+                                favorites.isEmpty && product.id == myProducts.first?.id,
+                                .libraryFavorites
+                            )
                     }
                     .onDelete { indexSet in
                         for i in indexSet { modelContext.delete(myProducts[i]) }
@@ -148,17 +210,60 @@ struct LibraryView: View {
             }
             .listRowBackground(Color.cardBackground)
             .listRowSeparatorTint(Color.inkDivider)
+
+            // BLV-/Preloaded-Treffer — nur wenn aktiv gesucht und Treffer vorhanden
+            if !blvSearchResults.isEmpty {
+                Section {
+                    ForEach(blvSearchResults) { product in
+                        productRow(product)
+                    }
+                } header: {
+                    SectionLabel(text: "Schweizer Datenbank")
+                        .padding(.top, 4)
+                }
+                .listRowBackground(Color.cardBackground)
+                .listRowSeparatorTint(Color.inkDivider)
+            }
+
+            // Keine-Treffer-Hinweis (nur bei aktiver Suche, wenn nichts gefunden)
+            if hasNoResults {
+                Section {
+                    VStack(spacing: 10) {
+                        MascotView(size: 56, mood: .think, tone: .beige)
+                            .padding(.top, 8)
+                        Text("Keine Treffer für „\(searchText)\"")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.inkPrimary)
+                        Text("Versuch eine andere Schreibweise — oder leg das Produkt manuell an.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.inkSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 12)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
+            // Bottom padding für FloatingTabBar (sonst wird die letzte Row verdeckt)
+            Section {
+                Color.clear
+                    .frame(height: 90)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .searchable(text: $searchText, prompt: "Produkt suchen")
     }
 
     // MARK: - Product Row
 
     private func productRow(_ product: Product) -> some View {
         HStack(spacing: 12) {
-            // Letter avatar
+            // Letter avatar (tapping opens detail; the star button handles its own tap)
             ZStack {
                 Circle()
                     .fill(product.source == .preloaded ? Color.beige : Color.terra.opacity(0.15))
@@ -190,8 +295,81 @@ struct LibraryView: View {
                     .font(.system(size: 16))
             }
             .buttonStyle(.borderless)
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
+            .accessibilityLabel(product.isFavorite ? "Aus Favoriten entfernen" : "Zu Favoriten hinzufügen")
+            .accessibilityValue(product.name)
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onTapGesture { selectedProduct = product }
+    }
+
+    // MARK: - Demo Favorite Row (Coachmark-Tour)
+
+    private func demoFavoriteRow(_ fav: CoachmarkDemoData.DemoFavorite) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.terra.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Text(String(fav.name.prefix(1)).uppercased())
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.warmBrown)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(fav.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.inkPrimary)
+                Text("\(fav.kcalPer100g) kcal · \(fav.proteinPer100g, specifier: "%.1f")g P")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.inkSecondary)
+            }
+            Spacer()
+            Image(systemName: "star.fill")
+                .foregroundStyle(Color.amber)
+                .font(.system(size: 16))
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func demoMyProductRow(_ demo: CoachmarkDemoData.DemoMyProduct) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.terra.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Text(String(demo.name.prefix(1)).uppercased())
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.warmBrown)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(demo.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.inkPrimary)
+                HStack(spacing: 6) {
+                    Text("\(demo.kcalPer100g) kcal · \(demo.proteinPer100g, specifier: "%.1f")g P")
+                        .foregroundStyle(Color.inkSecondary)
+                    demoSourceTag(for: demo.source)
+                }
+                .font(.system(size: 11))
+            }
+            Spacer()
+            Image(systemName: "star")
+                .foregroundStyle(Color.inkTertiary)
+                .font(.system(size: 16))
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func demoSourceTag(for source: ProductSource) -> some View {
+        switch source {
+        case .ocr:    Text("· Gescannt").foregroundStyle(Color.terra)
+        case .dish:   Text("· Gericht").foregroundStyle(Color.forest)
+        case .manual: Text("· Manuell").foregroundStyle(Color.warmBrown)
+        default:      EmptyView()
+        }
     }
 
     @ViewBuilder
@@ -203,6 +381,8 @@ struct LibraryView: View {
             Text("· Gericht").foregroundStyle(Color.forest)
         case .manual:
             Text("· Manuell").foregroundStyle(Color.warmBrown)
+        case .barcode:
+            Text("· Barcode").foregroundStyle(Color.terra)
         default:
             EmptyView()
         }

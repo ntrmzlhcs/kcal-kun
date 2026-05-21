@@ -53,7 +53,7 @@ final class HealthKitService {
         return result
     }
 
-    func fetchLatestWeightAverage(windowSize: Int = 5) async -> Double? {
+    func fetchLatestWeightAverage(windowSize: Int = 7) async -> Double? {
         guard HKHealthStore.isHealthDataAvailable() else { return nil }
         let sortDesc = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
         let samples = try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[HKQuantitySample], Error>) in
@@ -73,7 +73,7 @@ final class HealthKitService {
         return total / Double(s.count)
     }
 
-    func fetchRollingAverageWeights(days: Int, windowSize: Int = 5) async -> [Date: Double] {
+    func fetchRollingAverageWeights(days: Int, windowSize: Int = 7) async -> [Date: Double] {
         guard HKHealthStore.isHealthDataAvailable() else { return [:] }
         let cal       = Calendar.current
         let today     = cal.startOfDay(for: Date())

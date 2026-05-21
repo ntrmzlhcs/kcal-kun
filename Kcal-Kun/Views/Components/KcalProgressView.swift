@@ -7,7 +7,11 @@ struct KcalProgressView: View {
 
     private var budget: Double { profile.bmr + workoutKcal }
     private var effectiveTarget: Double {
-        profile.goalType == .deficit ? budget - profile.kcalDelta : budget + profile.kcalDelta
+        switch profile.goalType {
+        case .deficit:     budget - profile.kcalDelta
+        case .maintenance: budget
+        case .surplus:     budget + profile.kcalDelta
+        }
     }
 
     private var progress: Double {
@@ -24,9 +28,14 @@ struct KcalProgressView: View {
     private var ringColor: Color {
         switch profile.goalType {
         case .deficit:
-            if consumed >= budget         { return .terra }
+            if consumed >= budget          { return .terra }
             if consumed >= effectiveTarget { return .amber }
             return .forest
+        case .maintenance:
+            if consumed > effectiveTarget * 1.10 { return .terra }
+            if consumed > effectiveTarget * 1.05 { return .amber }
+            if consumed >= effectiveTarget * 0.90 { return .forest }
+            return .inkTertiary
         case .surplus:
             if consumed > effectiveTarget * 1.10 { return .terra }
             if consumed > effectiveTarget * 1.05 { return .amber }
@@ -42,6 +51,11 @@ struct KcalProgressView: View {
         case .deficit:
             if consumed >= budget          { return "Über Grundumsatz!" }
             if consumed >= effectiveTarget { return "\(Int(consumed - effectiveTarget)) kcal über Ziel" }
+            return "\(Int(remaining)) kcal übrig"
+        case .maintenance:
+            if consumed > effectiveTarget * 1.10 { return "\(Int(consumed - effectiveTarget)) kcal über Tagesziel" }
+            if consumed > effectiveTarget * 1.05 { return "Leicht über Tagesziel" }
+            if consumed >= effectiveTarget * 0.90 { return "Im Zielbereich" }
             return "\(Int(remaining)) kcal übrig"
         case .surplus:
             if consumed > effectiveTarget * 1.10 { return "\(Int(consumed - effectiveTarget)) kcal über Ziel" }

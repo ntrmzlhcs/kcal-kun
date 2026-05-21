@@ -2,6 +2,17 @@ import SwiftUI
 import SwiftData
 
 struct ManualProductEntryView: View {
+    let editingProduct: Product?
+    /// Optional: EAN-Code, falls die Manuelle Eingabe aus dem Barcode-Not-Found-
+    /// Flow kommt. Wird beim Speichern auf das Product persistiert, sodass
+    /// derselbe Scan beim nächsten Mal lokal getroffen wird.
+    let prefilledBarcode: String?
+
+    init(editingProduct: Product? = nil, prefilledBarcode: String? = nil) {
+        self.editingProduct = editingProduct
+        self.prefilledBarcode = prefilledBarcode
+    }
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -119,7 +130,7 @@ struct ManualProductEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Produkt erfassen")
+                    Text(editingProduct == nil ? "Produkt erfassen" : "Produkt bearbeiten")
                         .font(.display(18))
                         .foregroundStyle(Color.inkPrimary)
                 }
@@ -128,7 +139,21 @@ struct ManualProductEntryView: View {
                         .foregroundStyle(Color.warmBrown)
                 }
             }
-            .onAppear { nameFocused = true }
+            .onAppear {
+                if let p = editingProduct {
+                    name    = p.name
+                    kcal    = formatForField(p.kcalPer100g)
+                    protein = formatForField(p.proteinPer100g)
+                    fat     = formatForField(p.fatPer100g)
+                    carbs   = formatForField(p.carbsPer100g)
+                    fiber   = p.fiberPer100g.map { formatForField($0) } ?? ""
+                    sugar   = p.sugarPer100g.map { formatForField($0) } ?? ""
+                    salt    = p.saltPer100g.map  { formatForField($0) } ?? ""
+                    if fiber != "" || sugar != "" || salt != "" { showOptional = true }
+                } else {
+                    nameFocused = true
+                }
+            }
         }
     }
 
@@ -155,25 +180,41 @@ struct ManualProductEntryView: View {
     }
 
     private func saveAndDismiss() {
-        guard let kcalVal = parseDouble(kcal),
+        guard let kcalVal    = parseDouble(kcal),
               let proteinVal = parseDouble(protein),
-              let fatVal = parseDouble(fat),
-              let carbsVal = parseDouble(carbs) else { return }
+              let fatVal     = parseDouble(fat),
+              let carbsVal   = parseDouble(carbs) else { return }
 
-        let product = Product(
-            name: name.trimmingCharacters(in: .whitespaces),
-            kcalPer100g: kcalVal,
-            proteinPer100g: proteinVal,
-            fatPer100g: fatVal,
-            carbsPer100g: carbsVal,
-            fiberPer100g: parseDouble(fiber),
-            sugarPer100g: parseDouble(sugar),
-            saltPer100g: parseDouble(salt),
-            source: .manual
-        )
-        modelContext.insert(product)
+        if let p = editingProduct {
+            p.name           = name.trimmingCharacters(in: .whitespaces)
+            p.kcalPer100g    = kcalVal
+            p.proteinPer100g = proteinVal
+            p.fatPer100g     = fatVal
+            p.carbsPer100g   = carbsVal
+            p.fiberPer100g   = parseDouble(fiber)
+            p.sugarPer100g   = parseDouble(sugar)
+            p.saltPer100g    = parseDouble(salt)
+        } else {
+            let product = Product(
+                name: name.trimmingCharacters(in: .whitespaces),
+                kcalPer100g: kcalVal,
+                proteinPer100g: proteinVal,
+                fatPer100g: fatVal,
+                carbsPer100g: carbsVal,
+                fiberPer100g: parseDouble(fiber),
+                sugarPer100g: parseDouble(sugar),
+                saltPer100g: parseDouble(salt),
+                source: .manual,
+                barcode: prefilledBarcode
+            )
+            modelContext.insert(product)
+        }
         try? modelContext.save()
         dismiss()
+    }
+
+    private func formatForField(_ v: Double) -> String {
+        v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.1f", v)
     }
 }
 

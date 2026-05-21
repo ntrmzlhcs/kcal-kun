@@ -15,6 +15,8 @@ struct DiaryView: View {
     @State private var showExportOptions = false
 
     @AppStorage("selectedMascotTone") private var savedMascotTone = "cream"
+    @Environment(\.coachmarkDemoMode) private var coachmarkDemo
+    @Environment(\.scenePhase) private var scenePhase
 
     private var profile: UserProfile? { profiles.first }
 
@@ -48,6 +50,7 @@ struct DiaryView: View {
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { scrollProxy in
             List {
                 // ── Date navigator ─────────────────────────────────
                 Section {
@@ -71,37 +74,52 @@ struct DiaryView: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 4, leading: 18, bottom: 8, trailing: 18))
                     .listRowSeparator(.hidden)
+                    .id("coachmark.heroCard")
                 }
 
                 // ── Meal slots ─────────────────────────────────────
                 ForEach(MealSlot.allCases) { slot in
                     let slotEntries = entries(for: slot)
-                    let slotKcal = slotEntries.reduce(0) { $0 + $1.kcal }
+                    let demoEntries = coachmarkDemo
+                        ? CoachmarkDemoData.demoDiaryEntries.filter { $0.mealSlot == slot }
+                        : []
+                    let displayKcal: Double = coachmarkDemo
+                        ? demoEntries.reduce(0) { $0 + $1.kcal }
+                        : slotEntries.reduce(0) { $0 + $1.kcal }
+                    let isSlotEmpty = coachmarkDemo ? demoEntries.isEmpty : slotEntries.isEmpty
 
                     Section {
-                        // Entry rows
-                        ForEach(slotEntries) { entry in
-                            Button { selectedEntry = entry } label: {
-                                CozyEntryRow(entry: entry)
+                        // Demo-Rows (Tour-Modus) ODER echte Entry-Rows
+                        if coachmarkDemo {
+                            ForEach(demoEntries) { demo in
+                                DemoEntryRow(demo: demo)
+                                    .listRowBackground(Color.cardBackground)
+                                    .listRowSeparatorTint(Color.inkDivider)
                             }
-                            .buttonStyle(.plain)
-                            .listRowBackground(Color.cardBackground)
-                            .listRowSeparatorTint(Color.inkDivider)
-                            .swipeActions(edge: .leading) {
-                                Button {
-                                    entryToCopy = entry
-                                } label: {
-                                    Label("Kopieren", systemImage: "doc.on.doc")
+                        } else {
+                            ForEach(slotEntries) { entry in
+                                Button { selectedEntry = entry } label: {
+                                    CozyEntryRow(entry: entry)
                                 }
-                                .tint(Color.warmBrown)
+                                .buttonStyle(.plain)
+                                .listRowBackground(Color.cardBackground)
+                                .listRowSeparatorTint(Color.inkDivider)
+                                .swipeActions(edge: .leading) {
+                                    Button {
+                                        entryToCopy = entry
+                                    } label: {
+                                        Label("Kopieren", systemImage: "doc.on.doc")
+                                    }
+                                    .tint(Color.warmBrown)
+                                }
                             }
-                        }
-                        .onDelete { indexSet in
-                            deleteEntries(slotEntries, at: indexSet)
+                            .onDelete { indexSet in
+                                deleteEntries(slotEntries, at: indexSet)
+                            }
                         }
 
-                        // Empty state
-                        if slotEntries.isEmpty {
+                        // Empty state (auch im Demo-Modus, wenn Slot leer ist)
+                        if isSlotEmpty {
                             HStack(spacing: 10) {
                                 MascotView(size: 28, mood: .sleep, tone: .beige, tilt: -6)
                                 Text("Schläft noch — füg etwas hinzu.")
@@ -121,14 +139,19 @@ struct DiaryView: View {
                             Label("Hinzufügen", systemImage: "plus.circle.fill")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(Color.terra)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Zum \(slot.rawValue) hinzufügen")
+                        .coachmarkTargetIf(slot == .breakfast, .breakfastPlus)
+                        .id("plusButton.\(slot.rawValue)")
                         .listRowBackground(Color.cardBackground)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 10, trailing: 16))
 
                     } header: {
-                        CozyMealSectionHeader(slot: slot, slotKcal: slotKcal)
+                        CozyMealSectionHeader(slot: slot, slotKcal: displayKcal)
                     }
                     .listSectionSeparator(.hidden)
                 }
@@ -148,6 +171,7 @@ struct DiaryView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showProfile = true } label: { avatarView }
+                        .accessibilityLabel("Profil öffnen")
                 }
                 ToolbarItem(placement: .principal) {
                     Text("Tagebuch")
@@ -160,6 +184,7 @@ struct DiaryView: View {
                             .foregroundStyle(Color.warmBrown)
                     }
                     .disabled(allEntries.isEmpty)
+                    .accessibilityLabel("Tagebuch exportieren")
                 }
             }
             .sheet(item: $activeSheet) { slot in
@@ -200,6 +225,39 @@ struct DiaryView: View {
             .task(id: selectedDate) {
                 await healthKit.fetchWorkoutKcal(for: selectedDate)
             }
+            // Foreground-Return: wenn die App aus dem Hintergrund kommt, neu aus
+            // HealthKit ziehen — falls der User zwischendurch z. B. einen Walk auf
+            // der Apple Watch geloggt hat. @Observable propagiert die Änderung an
+            // HeroKcalCard automatisch.
+            .onChange(of: scenePhase) { _, newPhase in
+                guard newPhase == .active else { return }
+                Task { await healthKit.fetchWorkoutKcal(for: selectedDate) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .coachmarkStepChanged)) { notif in
+                guard let target = notif.object as? CoachmarkTarget else { return }
+
+                let scrollID: String?
+                let scrollAnchor: UnitPoint
+                switch target {
+                case .breakfastPlus:
+                    scrollID = "plusButton.\(MealSlot.breakfast.rawValue)"
+                    scrollAnchor = .center
+                case .kcalRing, .macroChips:
+                    scrollID = "coachmark.heroCard"
+                    scrollAnchor = .top
+                default:
+                    scrollID = nil
+                    scrollAnchor = .top
+                }
+
+                guard let id = scrollID else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    withAnimation(.easeInOut(duration: 0.45)) {
+                        scrollProxy.scrollTo(id, anchor: scrollAnchor)
+                    }
+                }
+            }
+            } // ScrollViewReader
         }
     }
 
@@ -261,6 +319,37 @@ struct DiaryView: View {
     }
 }
 
+// MARK: - Demo Entry Row (Coachmark-Tour only)
+
+/// Optisch wie CozyEntryRow, aber für DemoDiaryEntry — keine SwiftData-Bindung,
+/// kein Tap-Edit (würde im Demo eh nichts machen).
+private struct DemoEntryRow: View {
+    let demo: CoachmarkDemoData.DemoDiaryEntry
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.beige)
+                    .frame(width: 36, height: 36)
+                Text(String(demo.productName.prefix(1)).uppercased())
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.warmBrown)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(demo.productName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.inkPrimary)
+                Text("\(Int(demo.grams)) \(demo.unit) · \(Int(demo.kcal)) kcal")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.inkSecondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 // MARK: - Hero Kcal Card
 
 private struct HeroKcalCard: View {
@@ -272,11 +361,33 @@ private struct HeroKcalCard: View {
     let carbs: Double
     let profile: UserProfile?
 
-    private var progress: Double { min(consumed / max(target, 1), 1.0) }
-    private var remaining: Double { max(0, target - consumed) }
+    @Environment(\.coachmarkDemoMode) private var coachmarkDemo
+
+    // Während die Tour aktiv ist, zeigen wir Demo-Werte statt echter Daten
+    private var displayConsumed: Double {
+        coachmarkDemo ? CoachmarkDemoData.dailyConsumed : consumed
+    }
+    private var displayTarget: Double {
+        coachmarkDemo ? CoachmarkDemoData.dailyTarget : target
+    }
+    private var displayWorkout: Double {
+        coachmarkDemo ? CoachmarkDemoData.workoutKcal : workoutKcal
+    }
+    private var displayProtein: Double {
+        coachmarkDemo ? CoachmarkDemoData.dailyProtein : protein
+    }
+    private var displayFat: Double {
+        coachmarkDemo ? CoachmarkDemoData.dailyFat : fat
+    }
+    private var displayCarbs: Double {
+        coachmarkDemo ? CoachmarkDemoData.dailyCarbs : carbs
+    }
+
+    private var progress: Double { min(displayConsumed / max(displayTarget, 1), 1.0) }
+    private var remaining: Double { max(0, displayTarget - displayConsumed) }
     private var kcalOverflow: Double {
-        guard consumed > target else { return 0 }
-        return (consumed - target) / max(target, 1)
+        guard displayConsumed > displayTarget else { return 0 }
+        return (displayConsumed - displayTarget) / max(displayTarget, 1)
     }
 
     var body: some View {
@@ -286,7 +397,7 @@ private struct HeroKcalCard: View {
                 ProgressRing(progress: progress, overflow: kcalOverflow, size: 148, strokeWidth: 12, color: .terra) {
                     AnyView(
                         VStack(spacing: 4) {
-                            Text(Int(consumed).formatted())
+                            Text(Int(displayConsumed).formatted())
                                 .font(.display(44))
                                 .foregroundStyle(Color.inkPrimary)
                                 .monospacedDigit()
@@ -298,23 +409,26 @@ private struct HeroKcalCard: View {
                         }
                     )
                 }
+                .frame(width: 148, height: 148)
 
                 // Stats column
                 VStack(alignment: .leading, spacing: 6) {
-                    StatRow(label: "Ziel", value: "\(Int(target).formatted())", unit: "kcal")
+                    StatRow(label: "Ziel", value: "\(Int(displayTarget).formatted())", unit: "kcal")
                     Divider().overlay(Color.inkDivider)
                     StatRow(label: "Übrig", value: "\(Int(remaining).formatted())", unit: "kcal", highlight: true)
                     Divider().overlay(Color.inkDivider)
-                    StatRow(label: "Verbrannt", value: workoutKcal > 0 ? "+\(Int(workoutKcal))" : "—", unit: workoutKcal > 0 ? "kcal" : "", muted: workoutKcal == 0)
+                    StatRow(label: "Verbrannt", value: displayWorkout > 0 ? "+\(Int(displayWorkout))" : "—", unit: displayWorkout > 0 ? "kcal" : "", muted: displayWorkout == 0)
                 }
             }
+            .coachmarkTarget(.kcalRing)
 
             // Macro mini-rings — goals derived from profile diet style
             HStack(spacing: 8) {
-                MacroChip(label: "Protein", value: protein, goal: profile?.proteinGoal(kcal: target) ?? 150, color: .terra,  letter: "P")
-                MacroChip(label: "KH",      value: carbs,   goal: profile?.carbGoal(kcal: target)    ?? 200, color: .forest, letter: "K")
-                MacroChip(label: "Fett",    value: fat,     goal: profile?.fatGoal(kcal: target)     ?? 67,  color: .amber,  letter: "F")
+                MacroChip(label: "Protein", value: displayProtein, goal: profile?.proteinGoal(kcal: displayTarget) ?? 150, color: .terra,  letter: "P")
+                MacroChip(label: "KH",      value: displayCarbs,   goal: profile?.carbGoal(kcal: displayTarget)    ?? 200, color: .forest, letter: "K")
+                MacroChip(label: "Fett",    value: displayFat,     goal: profile?.fatGoal(kcal: displayTarget)     ?? 67,  color: .amber,  letter: "F")
             }
+            .coachmarkTarget(.macroChips)
         }
         .padding(.vertical, 24)
         .padding(.horizontal, 20)
@@ -654,6 +768,7 @@ private struct CopyEntriesSheet: View {
                 Form {
                     Section("Zieldatum") {
                         DatePicker("Datum", selection: $targetDate, displayedComponents: .date)
+                            .environment(\.locale, Locale(identifier: "de_CH"))
                     }
                     Section("Einträge") {
                         ForEach($items) { $item in

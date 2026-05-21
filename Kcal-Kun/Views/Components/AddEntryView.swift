@@ -16,6 +16,11 @@ struct AddEntryView: View {
     @State private var useMl = false
     @State private var selectedSlot: MealSlot
     @State private var showManualEntry = false
+    @State private var barcodeVm = BarcodeScannerViewModel()
+    /// Tracking-Flag für QuickAdd-Auto-Dismiss: True wenn das zuletzt
+    /// präsentierte Barcode-Sheet die Result-View war — nach onDismiss
+    /// schliessen wir dann auch AddEntryView (DiaryEntry ist erstellt).
+    @State private var lastBarcodeSheetWasResult = false
     @FocusState private var gramsFocused: Bool
 
     init(selectedDate: Date, initialSlot: MealSlot) {
@@ -35,7 +40,7 @@ struct AddEntryView: View {
     }
 
     private var myProducts: [Product] {
-        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual || $0.source == .dish }
+        let base = allProducts.filter { $0.source == .ocr || $0.source == .manual || $0.source == .dish || $0.source == .barcode }
         guard isSearching else { return base }
         return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
@@ -75,6 +80,39 @@ struct AddEntryView: View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             List {
+                // Quick-Action: Barcode scannen direkt aus dem Picker
+                Section {
+                    Button {
+                        barcodeVm.startScanning(context: .quickAdd(date: selectedDate, slot: selectedSlot))
+                    } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.terra.opacity(0.15))
+                                    .frame(width: 34, height: 34)
+                                Image(systemName: "barcode.viewfinder")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Color.terra)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Barcode scannen")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Color.inkPrimary)
+                                Text("Schnell-Logging via Strichcode")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.inkSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Color.inkTertiary)
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .listRowBackground(Color.cardBackground)
+                .listRowSeparatorTint(Color.inkDivider)
+
                 if !favorites.isEmpty {
                     Section {
                         ForEach(favorites) { product in
@@ -144,11 +182,108 @@ struct AddEntryView: View {
                     Image(systemName: "plus")
                         .foregroundStyle(Color.warmBrown)
                 }
+                .accessibilityLabel("Neues Produkt manuell erfassen")
             }
         }
         .sheet(isPresented: $showManualEntry) {
             ManualProductEntryView()
         }
+        // Barcode-Flow: Single-Source-of-Truth via `barcodeVm.phase`.
+        // (QuickAdd-Variante: nach erfolgreichem Save dismissed sich AddEntryView,
+        // weil der DiaryEntry direkt in BarcodeResultView erstellt wird.)
+        .fullScreenCover(isPresented: barcodeScanningBinding) {
+            BarcodeScannerView(
+                onCode: { code in
+                    Task { await barcodeVm.handleScannedCode(code, allProducts: allProducts) }
+                },
+                onCancel: { barcodeVm.reset() }
+            )
+            .ignoresSafeArea()
+        }
+        .sheet(item: barcodeSheetBinding, onDismiss: {
+            // Nach Result-Sheet im QuickAdd-Kontext: AddEntryView gleich mit
+            // dismissen, falls der DiaryEntry erstellt wurde.
+            let wasResult = lastBarcodeSheetWasResult
+            lastBarcodeSheetWasResult = false
+            if wasResult, case .quickAdd = barcodeVm.context {
+                dismiss()
+            }
+        }) { item in
+            barcodeSheetContent(for: item.phase)
+                .onAppear {
+                    if item.phase == .foundResult || item.phase == .foundLocal {
+                        lastBarcodeSheetWasResult = true
+                    }
+                }
+        }
+        .alert("Barcode-Fehler", isPresented: barcodeErrorBinding) {
+            Button("OK", role: .cancel) { barcodeVm.reset() }
+        } message: {
+            if case .error(let msg) = barcodeVm.phase {
+                Text(msg)
+            }
+        }
+    }
+
+    // MARK: - Barcode Phase: Single-Source-of-Truth Bindings
+
+    private var barcodeScanningBinding: Binding<Bool> {
+        Binding(
+            get: { barcodeVm.phase == .scanning },
+            set: { if !$0 { barcodeVm.reset() } }
+        )
+    }
+
+    private var barcodeSheetBinding: Binding<BarcodePhaseSheetItem?> {
+        Binding(
+            get: { BarcodePhaseSheetItem.from(barcodeVm.phase) },
+            set: { newValue in
+                if newValue == nil, BarcodePhaseSheetItem.from(barcodeVm.phase) != nil {
+                    barcodeVm.reset()
+                }
+            }
+        )
+    }
+
+    @ViewBuilder
+    private func barcodeSheetContent(for phase: BarcodeScanPhase) -> some View {
+        switch phase {
+        case .looking:
+            BarcodeLookingSheet()
+        case .foundResult, .foundLocal:
+            BarcodeResultView(
+                result: barcodeVm.offResult,
+                localMatch: barcodeVm.localMatch,
+                context: barcodeVm.context
+            )
+        case .notFound:
+            BarcodeNotFoundSheet(
+                barcode: barcodeVm.lastScannedCode ?? "",
+                onLabelScan: {
+                    // Im QuickAdd-Kontext gibt's keinen direkten OCR-Einstieg;
+                    // reset und AddEntryView dismissen — User kann im Scanner-
+                    // Tab weitermachen.
+                    barcodeVm.reset()
+                    dismiss()
+                },
+                onManualEntry: {
+                    barcodeVm.reset()
+                    showManualEntry = true
+                }
+            )
+        default:
+            EmptyView()
+        }
+    }
+
+    private var barcodeErrorBinding: Binding<Bool> {
+        Binding(
+            get: {
+                if case .error = barcodeVm.phase { return true }
+                return false
+            },
+            set: { if !$0 { barcodeVm.reset() } }
+        )
     }
 
     private func productRow(_ product: Product) -> some View {
@@ -189,6 +324,10 @@ struct AddEntryView: View {
                     .font(.system(size: 15))
             }
             .buttonStyle(.borderless)
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
+            .accessibilityLabel(product.isFavorite ? "Aus Favoriten entfernen" : "Zu Favoriten hinzufügen")
+            .accessibilityValue(product.name)
         }
         .padding(.vertical, 2)
     }
@@ -196,10 +335,11 @@ struct AddEntryView: View {
     @ViewBuilder
     private func sourceTag(for product: Product) -> some View {
         switch product.source {
-        case .ocr:    Text("· Gescannt").foregroundStyle(Color.terra)
-        case .dish:   Text("· Gericht").foregroundStyle(Color.forest)
-        case .manual: Text("· Manuell").foregroundStyle(Color.warmBrown)
-        default:      EmptyView()
+        case .ocr:     Text("· Gescannt").foregroundStyle(Color.terra)
+        case .dish:    Text("· Gericht").foregroundStyle(Color.forest)
+        case .manual:  Text("· Manuell").foregroundStyle(Color.warmBrown)
+        case .barcode: Text("· Barcode").foregroundStyle(Color.terra)
+        default:       EmptyView()
         }
     }
 

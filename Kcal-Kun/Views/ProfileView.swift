@@ -20,6 +20,11 @@ struct ProfileView: View {
     @State private var loaded = false
     @State private var showAvatarPicker = false
     @State private var healthKitWeight: Double? = nil
+    @State private var showBackupExport = false
+    @State private var showBackupRestore = false
+    @State private var triggerCoachmarkOnDismiss = false
+    @State private var showAboutApp = false
+    @State private var showAPIKeySetup = false
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("selectedMascotTone") private var savedMascotTone = "cream"
@@ -38,7 +43,7 @@ struct ProfileView: View {
         parseDouble(heightText) != nil &&
         parseDouble(weightText) != nil &&
         parseDouble(bmrText) != nil &&
-        parseDouble(kcalDeltaText) != nil
+        (goalType == .maintenance || parseDouble(kcalDeltaText) != nil)
     }
 
     var body: some View {
@@ -53,6 +58,10 @@ struct ProfileView: View {
                         caloriesSection
                         dietStyleSection
                         saveSection
+                        helpSection
+                        aiSetupSection
+                        dataSection
+                        appSection
                         onboardingResetSection
                         Spacer().frame(height: 24)
                     }
@@ -75,6 +84,29 @@ struct ProfileView: View {
                 AvatarPickerSheetContent(savedMascotTone: $savedMascotTone, photoData: $photoData)
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showBackupExport) {
+                BackupExportView()
+            }
+            .sheet(isPresented: $showBackupRestore) {
+                BackupRestoreView()
+            }
+            .sheet(isPresented: $showAboutApp) {
+                AboutAppView()
+            }
+            .sheet(isPresented: $showAPIKeySetup) {
+                APIKeySetupView(
+                    mode: .sheet,
+                    onDone: { showAPIKeySetup = false }
+                )
+            }
+            .onDisappear {
+                if triggerCoachmarkOnDismiss {
+                    triggerCoachmarkOnDismiss = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        NotificationCenter.default.post(name: .startCoachmarkTour, object: nil)
+                    }
+                }
             }
             .onAppear {
                 guard !loaded, let p = profile else { loaded = true; return }
@@ -131,6 +163,7 @@ struct ProfileView: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Profilbild ändern")
     }
 
     // MARK: - Body Data
@@ -167,7 +200,7 @@ struct ProfileView: View {
                                 .font(.system(size: 13))
                         }
                         if healthKitWeight != nil {
-                            Text("Ø 5 Messungen · HealthKit")
+                            Text("Ø 7 Messungen · HealthKit")
                                 .font(.system(size: 10))
                                 .foregroundStyle(Color.inkTertiary)
                         }
@@ -223,31 +256,43 @@ struct ProfileView: View {
                     Spacer()
                     Picker("Ziel", selection: $goalType) {
                         Text("Defizit").tag(GoalType.deficit)
-                        Text("Massephase").tag(GoalType.surplus)
+                        Text("Halten").tag(GoalType.maintenance)
+                        Text("Aufbau").tag(GoalType.surplus)
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 160)
+                    .frame(width: 210)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
+                .onChange(of: goalType) { _, newVal in
+                    if newVal == .maintenance { kcalDeltaText = "0" }
+                }
 
-                Divider().padding(.leading, 14)
-                profileRow(goalType == .deficit ? "Defizit" : "Überschuss") {
-                    HStack(spacing: 4) {
-                        TextField("kcal", text: $kcalDeltaText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 70)
-                            .foregroundStyle(Color.terra)
-                        Text("kcal")
-                            .foregroundStyle(Color.inkSecondary)
-                            .font(.system(size: 13))
+                if goalType != .maintenance {
+                    Divider().padding(.leading, 14)
+                    profileRow(goalType == .deficit ? "Defizit" : "Überschuss") {
+                        HStack(spacing: 4) {
+                            TextField("kcal", text: $kcalDeltaText)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 70)
+                                .foregroundStyle(Color.terra)
+                            Text("kcal")
+                                .foregroundStyle(Color.inkSecondary)
+                                .font(.system(size: 13))
+                        }
                     }
                 }
+
                 Divider().padding(.leading, 14)
 
-                if let bmr = parseDouble(bmrText), let delta = parseDouble(kcalDeltaText) {
-                    let target = goalType == .deficit ? bmr - delta : bmr + delta
+                if let bmr = parseDouble(bmrText) {
+                    let delta = parseDouble(kcalDeltaText) ?? 0
+                    let target: Double = switch goalType {
+                    case .deficit:     bmr - delta
+                    case .maintenance: bmr
+                    case .surplus:     bmr + delta
+                    }
                     HStack {
                         Text("Tagesziel")
                             .font(.system(size: 14))
@@ -350,6 +395,205 @@ struct ProfileView: View {
         .animation(.spring(response: 0.25), value: canSave)
     }
 
+    // MARK: - Hilfe (Coachmark-Tour)
+
+    private var helpSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: "Hilfe")
+                .padding(.horizontal, 18)
+            Button {
+                triggerCoachmarkOnDismiss = true
+                dismiss()
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.terra.opacity(0.12))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.terra)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Tour ansehen")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.inkPrimary)
+                        Text("\(COACH_STEPS.count)-Schritt-Rundgang durch die App")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.inkTertiary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.inkDivider, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 18)
+        }
+    }
+
+    // MARK: - KI-Setup (Gemini-API-Key)
+
+    private var aiSetupSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: "KI-Setup")
+                .padding(.horizontal, 18)
+            Button {
+                showAPIKeySetup = true
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill((APIKeyService.hasKey ? Color.forest : Color.warmBrown).opacity(0.12))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(APIKeyService.hasKey ? Color.forest : Color.warmBrown)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Gemini-API-Key")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.inkPrimary)
+                        if APIKeyService.hasKey, let key = APIKeyService.getKey() {
+                            Text("Gespeichert: \(APIKeyService.masked(key))")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color.forest)
+                        } else {
+                            Text("Noch nicht eingerichtet — antippen")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color.warmBrown)
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.inkTertiary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.inkDivider, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 18)
+        }
+    }
+
+    // MARK: - Daten (Backup)
+
+    private var dataSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: "Daten")
+                .padding(.horizontal, 18)
+
+            VStack(spacing: 0) {
+                dataRow(
+                    icon: "square.and.arrow.up",
+                    label: "Backup exportieren",
+                    sublabel: "Profil, Produkte, Tagebuch als Datei",
+                    tint: Color.terra
+                ) { showBackupExport = true }
+
+                Divider().padding(.leading, 14)
+
+                dataRow(
+                    icon: "square.and.arrow.down",
+                    label: "Backup wiederherstellen",
+                    sublabel: "Daten aus einer .json-Datei zusammenführen",
+                    tint: Color.warmBrown
+                ) { showBackupRestore = true }
+            }
+            .background(Color.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.inkDivider, lineWidth: 1))
+            .padding(.horizontal, 18)
+        }
+    }
+
+    @ViewBuilder
+    private func dataRow(icon: String, label: String, sublabel: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(tint.opacity(0.12))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(tint)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.inkPrimary)
+                    Text(sublabel)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.inkSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.inkTertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - App (Über die App / Legal)
+
+    private var appSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: "App")
+                .padding(.horizontal, 18)
+            Button {
+                showAboutApp = true
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.warmBrown.opacity(0.12))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.warmBrown)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Über die App")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.inkPrimary)
+                        Text("Version, Datenschutz, Impressum, AGB")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.inkTertiary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.inkDivider, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 18)
+        }
+    }
+
     // MARK: - Onboarding Reset
 
     private var onboardingResetSection: some View {
@@ -388,8 +632,8 @@ struct ProfileView: View {
     private func save() {
         guard let h = parseDouble(heightText),
               let w = parseDouble(weightText),
-              let b = parseDouble(bmrText),
-              let d = parseDouble(kcalDeltaText) else { return }
+              let b = parseDouble(bmrText) else { return }
+        let d = goalType == .maintenance ? 0 : (parseDouble(kcalDeltaText) ?? 0)
 
         let p = profile ?? {
             let newProfile = UserProfile()

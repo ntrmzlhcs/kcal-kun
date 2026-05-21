@@ -4,8 +4,17 @@ import SwiftData
 struct ScannerView: View {
     @State private var vm = ScannerViewModel()
     @State private var dishVm = DishScannerViewModel()
+    @State private var barcodeVm = BarcodeScannerViewModel()
     @State private var dishCapturedImage: UIImage? = nil
     @State private var showDishDisclaimer = false
+    @State private var showAPIKeySetup = false
+    /// EAN aus dem Not-Found-Flow, der nach OCR oder Manuell-Save auf das
+    /// Product übertragen wird — damit der nächste Scan denselben Code lokal
+    /// trifft.
+    @State private var pendingBarcodeForFallback: String? = nil
+    @State private var showManualFromBarcode = false
+
+    @Query private var allProducts: [Product]
 
     var body: some View {
         NavigationStack {
@@ -31,9 +40,12 @@ struct ScannerView: View {
                         }
                     }
             }
-            .sheet(isPresented: $vm.showConfirmation, onDismiss: { vm.reset() }) {
+            .sheet(isPresented: $vm.showConfirmation, onDismiss: {
+                vm.reset()
+                pendingBarcodeForFallback = nil
+            }) {
                 if let result = vm.scanResult {
-                    ScanConfirmationView(vm: vm, result: result)
+                    ScanConfirmationView(vm: vm, result: result, prefilledBarcode: pendingBarcodeForFallback)
                 }
             }
             // Gericht-Analyse
@@ -56,6 +68,122 @@ struct ScannerView: View {
             } message: {
                 Text("KI-Analysen von Gerichten können Kalorien um ±20–35 % über- oder unterschätzen — je nach Komplexität und Bildqualität. Das Ergebnis ist eine Annäherung. Überprüfe und passe die Werte im nächsten Schritt an.")
             }
+            .sheet(isPresented: $showAPIKeySetup) {
+                APIKeySetupView(mode: .sheet, onDone: { showAPIKeySetup = false })
+            }
+            // Barcode-Flow: Single-Source-of-Truth via `barcodeVm.phase`.
+            // Drei Präsentationen, je nach Phase: FullScreenCover für die Live-
+            // Kamera, ein einziges `.sheet(item:)` für Looking/Result/NotFound
+            // (eliminiert Race-Conditions zwischen separaten Booleans), und
+            // ein Alert für Fehler.
+            .fullScreenCover(isPresented: barcodeScanningBinding) {
+                BarcodeScannerView(
+                    onCode: { code in
+                        Task { await barcodeVm.handleScannedCode(code, allProducts: allProducts) }
+                    },
+                    onCancel: { barcodeVm.reset() }
+                )
+                .ignoresSafeArea()
+            }
+            .sheet(item: barcodeSheetBinding) { item in
+                barcodeSheetContent(for: item.phase)
+            }
+            .sheet(isPresented: $showManualFromBarcode, onDismiss: { pendingBarcodeForFallback = nil }) {
+                ManualProductEntryView(prefilledBarcode: pendingBarcodeForFallback)
+            }
+            .alert("Barcode-Fehler", isPresented: barcodeErrorBinding) {
+                Button("OK", role: .cancel) { barcodeVm.reset() }
+            } message: {
+                if case .error(let msg) = barcodeVm.phase {
+                    Text(msg)
+                }
+            }
+        }
+    }
+
+    // MARK: - Barcode Phase: Single-Source-of-Truth Bindings
+
+    /// FullScreenCover für die Live-Kamera (.scanning).
+    private var barcodeScanningBinding: Binding<Bool> {
+        Binding(
+            get: { barcodeVm.phase == .scanning },
+            set: { if !$0 { barcodeVm.reset() } }
+        )
+    }
+
+    /// Ein einziges Sheet-Binding, das je nach Phase die richtige View rendert.
+    /// `.sheet(item:)` re-presents automatisch wenn die ID wechselt (Phase-Übergang
+    /// von .looking → .foundResult etc.), was eine saubere Animation gibt.
+    private var barcodeSheetBinding: Binding<BarcodePhaseSheetItem?> {
+        Binding(
+            get: { BarcodePhaseSheetItem.from(barcodeVm.phase) },
+            set: { newValue in
+                // Nil-Set = User hat das Sheet manuell dismissed. Nur reset,
+                // wenn wir tatsächlich in einer Sheet-Phase sind (sonst würde
+                // ein Phase-Übergang .notFound → .idle, ausgelöst von uns,
+                // den State doppelt zurücksetzen).
+                if newValue == nil, BarcodePhaseSheetItem.from(barcodeVm.phase) != nil {
+                    barcodeVm.reset()
+                }
+            }
+        )
+    }
+
+    /// Content je nach Phase. Single-Source-of-Truth: die View wird durch die
+    /// gleiche Sheet-Präsentation gemounted — keine konkurrierenden Bindings.
+    @ViewBuilder
+    private func barcodeSheetContent(for phase: BarcodeScanPhase) -> some View {
+        switch phase {
+        case .looking:
+            BarcodeLookingSheet()
+        case .foundResult, .foundLocal:
+            BarcodeResultView(
+                result: barcodeVm.offResult,
+                localMatch: barcodeVm.localMatch,
+                context: .scannerTab
+            )
+        case .notFound:
+            BarcodeNotFoundSheet(
+                barcode: barcodeVm.lastScannedCode ?? "",
+                onLabelScan: {
+                    // EAN für späteren OCR-Save vormerken, dann reset (Sheet
+                    // dismisst sich automatisch) und OCR-Camera öffnen.
+                    pendingBarcodeForFallback = barcodeVm.lastScannedCode
+                    barcodeVm.reset()
+                    if APIKeyService.hasKey {
+                        vm.showCamera = true
+                    } else {
+                        showAPIKeySetup = true
+                    }
+                },
+                onManualEntry: {
+                    pendingBarcodeForFallback = barcodeVm.lastScannedCode
+                    barcodeVm.reset()
+                    showManualFromBarcode = true
+                }
+            )
+        default:
+            // Unerreichbar: `barcodeSheetBinding` filtert andere Phasen weg.
+            EmptyView()
+        }
+    }
+
+    private var barcodeErrorBinding: Binding<Bool> {
+        Binding(
+            get: {
+                if case .error = barcodeVm.phase { return true }
+                return false
+            },
+            set: { if !$0 { barcodeVm.reset() } }
+        )
+    }
+
+    /// Triggert die Kamera für den Etikett-Scanner, prüft vorher ob ein API-Key da ist.
+    private func triggerLabelScanner() {
+        if APIKeyService.hasKey {
+            vm.showCamera = true
+        } else {
+            showAPIKeySetup = true
         }
     }
 
@@ -92,10 +220,11 @@ struct ScannerView: View {
 
                 // CTA buttons
                 VStack(spacing: 10) {
+                    // Haupt-CTA: Barcode (schnellster Weg für Verpackungs-Produkte)
                     Button {
-                        vm.showCamera = true
+                        barcodeVm.startScanning(context: .scannerTab)
                     } label: {
-                        Label("Nährwerttabelle scannen", systemImage: "barcode.viewfinder")
+                        Label("Barcode scannen", systemImage: "barcode.viewfinder")
                             .font(.system(size: 16, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
@@ -105,9 +234,30 @@ struct ScannerView: View {
                             .shadow(color: Color.terra.opacity(0.32), radius: 18, x: 0, y: 8)
                     }
                     .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
 
                     Button {
-                        showDishDisclaimer = true
+                        triggerLabelScanner()
+                    } label: {
+                        Label("Nährwerttabelle scannen", systemImage: "doc.text.viewfinder")
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color.cardBackground)
+                            .foregroundStyle(Color.warmBrown)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color(hex: 0x7C5E3C).opacity(0.18), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
+                    .coachmarkTarget(.scannerLabelBtn)
+
+                    Button {
+                        if APIKeyService.hasKey {
+                            showDishDisclaimer = true
+                        } else {
+                            showAPIKeySetup = true
+                        }
                     } label: {
                         Label("Gericht analysieren", systemImage: "frying.pan")
                             .font(.system(size: 14, weight: .semibold))
@@ -119,6 +269,8 @@ struct ScannerView: View {
                             .overlay(Capsule().stroke(Color(hex: 0x7C5E3C).opacity(0.18), lineWidth: 1))
                     }
                     .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
+                    .coachmarkTarget(.scannerDishBtn)
                 }
                 .padding(.horizontal, 18)
 
@@ -367,6 +519,24 @@ private struct BobAnimationModifier: ViewModifier {
                     bobOffset = -6
                 }
             }
+    }
+}
+
+/// Mini-Sheet während Open-Food-Facts-Lookup. Sehr klein gehalten — der Call
+/// dauert typisch <1 s, kein UI-Overkill nötig.
+struct BarcodeLookingSheet: View {
+    var body: some View {
+        VStack(spacing: 18) {
+            MascotView(size: 80, mood: .scan, tone: .cream, tilt: -4)
+            Text("Suche in Open Food Facts …")
+                .font(.system(size: 14))
+                .foregroundStyle(Color.inkSecondary)
+            ProgressView().tint(Color.terra)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.appBackground)
+        .presentationDetents([.height(220)])
+        .interactiveDismissDisabled()
     }
 }
 

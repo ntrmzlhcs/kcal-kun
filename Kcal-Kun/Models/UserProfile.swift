@@ -2,13 +2,15 @@ import Foundation
 import SwiftData
 
 enum GoalType: String, Codable {
-    case deficit  // Kaloriendefizit
-    case surplus  // Massephase / Überschuss
+    case deficit     // Kaloriendefizit
+    case maintenance // Gewicht halten
+    case surplus     // Massephase / Überschuss
 
     var displayName: String {
         switch self {
-        case .deficit: "Kaloriendefizit"
-        case .surplus: "Massephase"
+        case .deficit:     "Kaloriendefizit"
+        case .maintenance: "Gewicht halten"
+        case .surplus:     "Massephase"
         }
     }
 }

@@ -50,3 +50,11 @@ Kcal-Kun.xcodeproj/project.xcworkspace/xcuserdata/
 
 # Other
 *.log
+
+# Working / Reference assets — not part of the codebase
+_Backup/
+_Assets/
+*.pages
+
+# Claude Code state
+.claude/

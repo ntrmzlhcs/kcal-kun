@@ -11,6 +11,7 @@ struct StatsView: View {
     @AppStorage("aiNutritionAnalysisTimestamp") private var cachedTimestamp: Double = 0
     @State private var isLoadingAnalysis = false
     @State private var analysisError: String? = nil
+    @State private var showAPIKeySetup = false
     @State private var rollingWeights: [Date: Double] = [:]
     @State private var weeklyWorkoutKcals: [Date: Double] = [:]
 
@@ -32,8 +33,31 @@ struct StatsView: View {
         return allEntries.filter { $0.date >= cutoff }
     }
 
+    @Environment(\.coachmarkDemoMode) private var coachmarkDemo
+
+    private var displayRollingWeights: [Date: Double] {
+        coachmarkDemo ? CoachmarkDemoData.demoRollingWeights : rollingWeights
+    }
+
+    private var displayAnalysis: String {
+        coachmarkDemo ? CoachmarkDemoData.demoAnalysisJSON : cachedAnalysis
+    }
+
+    private var displayAnalysisTimestamp: TimeInterval {
+        coachmarkDemo ? Date().timeIntervalSince1970 : cachedTimestamp
+    }
+
     private var totals: MacroTotals {
-        MacroTotals(
+        if coachmarkDemo {
+            return MacroTotals(
+                kcal:    CoachmarkDemoData.dailyConsumed,
+                protein: CoachmarkDemoData.dailyProtein,
+                fat:     CoachmarkDemoData.dailyFat,
+                carbs:   CoachmarkDemoData.dailyCarbs,
+                fiber:   CoachmarkDemoData.dailyFiber
+            )
+        }
+        return MacroTotals(
             kcal:    dayEntries.reduce(0) { $0 + $1.kcal },
             protein: dayEntries.reduce(0) { $0 + $1.protein },
             fat:     dayEntries.reduce(0) { $0 + $1.fat },
@@ -47,50 +71,85 @@ struct StatsView: View {
             ZStack {
                 Color.appBackground.ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
-                        DateNavigator(selectedDate: $selectedDate)
-                            .padding(.horizontal, 18)
+                ScrollViewReader { scrollProxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 16) {
+                            DateNavigator(selectedDate: $selectedDate)
+                                .padding(.horizontal, 18)
 
-                        if totals.hasData {
-                            MacroDonutChart(totals: totals)
-                                .padding(.horizontal, 18)
-                            FiberProgressBar(fiber: totals.fiber)
-                                .padding(.horizontal, 18)
+                            if totals.hasData {
+                                MacroDonutChart(totals: totals)
+                                    .padding(.horizontal, 18)
+                                FiberProgressBar(fiber: totals.fiber)
+                                    .padding(.horizontal, 18)
+                            } else {
+                                VStack(spacing: 12) {
+                                    MascotView(size: 72, mood: .sleep, tone: .beige)
+                                    Text("Heute noch keine Einträge")
+                                        .font(.display(22))
+                                        .foregroundStyle(Color.inkPrimary)
+                                    Text("Füge Mahlzeiten im Tagebuch hinzu.")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Color.inkSecondary)
+                                }
+                                .padding(.top, 24)
+                                .padding(.bottom, 12)
+                            }
+
+                            // Wochenverlauf wird IMMER gezeigt — er bezieht sich auf die
+                            // letzten 7 Tage, nicht nur heute. (Im Tour-Demo-Modus mit Demo-Daten.)
                             WeeklyKcalChart(entries: last7DayEntries, workoutKcals: weeklyWorkoutKcals, profile: profiles.first)
                                 .padding(.horizontal, 18)
-                        }
+                                .coachmarkTarget(.statsWeeklyChart)  // misst nur die Card (ohne Polster)
+                                .padding(.top, 8)                      // 8pt Atemraum über Card
+                                .id("coachmark.statsWeeklyChart")     // Scroll-Target = Card + Polster
 
-                        if rollingWeights.count >= 2 {
-                            WeightChart(data: rollingWeights)
-                                .padding(.horizontal, 18)
-                        }
-
-                        if !totals.hasData {
-                            VStack(spacing: 12) {
-                                MascotView(size: 72, mood: .sleep, tone: .beige)
-                                Text("Noch keine Einträge")
-                                    .font(.display(22))
-                                    .foregroundStyle(Color.inkPrimary)
-                                Text("Füge Mahlzeiten im Tagebuch hinzu.")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color.inkSecondary)
+                            if displayRollingWeights.count >= 2 {
+                                WeightChart(data: displayRollingWeights)
+                                    .padding(.horizontal, 18)
+                                    .coachmarkTarget(.statsWeightChart)
+                                    .padding(.top, 8)
+                                    .id("coachmark.statsWeightChart")
                             }
-                            .padding(.top, 40)
+
+                            NutritionAnalysisCard(
+                                isLoading: isLoadingAnalysis,
+                                analysis: displayAnalysis,
+                                timestamp: displayAnalysisTimestamp,
+                                error: coachmarkDemo ? nil : analysisError,
+                                onRefresh: {
+                                    if APIKeyService.hasKey {
+                                        Task { await runAnalysis() }
+                                    } else {
+                                        showAPIKeySetup = true
+                                    }
+                                }
+                            )
+                            .padding(.horizontal, 18)
+                            .coachmarkTarget(.statsAIAnalysis)
+                            .padding(.top, 8)
+                            .id("coachmark.statsAIAnalysis")
+
+                            Spacer().frame(height: 90)
                         }
-
-                        NutritionAnalysisCard(
-                            isLoading: isLoadingAnalysis,
-                            analysis: cachedAnalysis,
-                            timestamp: cachedTimestamp,
-                            error: analysisError,
-                            onRefresh: { Task { await runAnalysis() } }
-                        )
-                        .padding(.horizontal, 18)
-
-                        Spacer().frame(height: 90)
+                        .padding(.top, 8)
                     }
-                    .padding(.top, 8)
+                    .onReceive(NotificationCenter.default.publisher(for: .coachmarkStepChanged)) { notif in
+                        guard let target = notif.object as? CoachmarkTarget else { return }
+                        let scrollID: String?
+                        switch target {
+                        case .statsWeeklyChart: scrollID = "coachmark.statsWeeklyChart"
+                        case .statsWeightChart: scrollID = "coachmark.statsWeightChart"
+                        case .statsAIAnalysis:  scrollID = "coachmark.statsAIAnalysis"
+                        default:                scrollID = nil
+                        }
+                        guard let id = scrollID else { return }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            withAnimation(.easeInOut(duration: 0.45)) {
+                                scrollProxy.scrollTo(id, anchor: .top)
+                            }
+                        }
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -105,6 +164,9 @@ struct StatsView: View {
         .task {
             rollingWeights = await healthKit.fetchRollingAverageWeights(days: 30)
             weeklyWorkoutKcals = await healthKit.fetchWorkoutKcals(forLast: 7)
+        }
+        .sheet(isPresented: $showAPIKeySetup) {
+            APIKeySetupView(mode: .sheet, onDone: { showAPIKeySetup = false })
         }
     }
 }
@@ -134,6 +196,28 @@ extension StatsView {
     }
 }
 
+// MARK: - Analysis Data Structures
+
+private struct MealSuggestion: Codable, Identifiable {
+    let id = UUID()
+    let name: String
+    let portions: String
+    let macros: String
+    private enum CodingKeys: String, CodingKey { case name, portions, macros }
+}
+
+private struct AnalysisSection: Codable, Identifiable {
+    let id: String
+    let title: String
+    let highlight: String?
+    let body: String?
+    let meals: [MealSuggestion]?
+}
+
+private struct AnalysisResult: Codable {
+    let sections: [AnalysisSection]
+}
+
 // MARK: - NutritionAnalysisCard
 
 private struct NutritionAnalysisCard: View {
@@ -142,6 +226,11 @@ private struct NutritionAnalysisCard: View {
     let timestamp: Double
     let error: String?
     let onRefresh: () -> Void
+
+    private var parsedResult: AnalysisResult? {
+        guard !analysis.isEmpty, let data = analysis.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(AnalysisResult.self, from: data)
+    }
 
     private var timestampLabel: String? {
         guard timestamp > 0 else { return nil }
@@ -202,22 +291,73 @@ private struct NutritionAnalysisCard: View {
                 Text("Tippe auf 'Aktualisieren' für eine Auswertung der letzten 30 Tage.")
                     .font(.system(size: 13))
                     .foregroundStyle(Color.inkSecondary)
+            } else if let result = parsedResult {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(result.sections) { section in
+                        analysisSectionView(section)
+                        if section.id != result.sections.last?.id {
+                            Divider().overlay(Color.inkDivider).padding(.vertical, 12)
+                        }
+                    }
+                }
             } else {
-                let rendered = (try? AttributedString(
-                    markdown: analysis,
-                    options: .init(interpretedSyntax: .full)
-                )) ?? AttributedString(analysis)
-                Text(rendered)
+                // Alter Cache (kein JSON) — Neustart anzeigen
+                Text("Format veraltet — bitte Analyse aktualisieren.")
                     .font(.system(size: 13))
-                    .foregroundStyle(Color.inkPrimary)
-                    .lineSpacing(4)
+                    .foregroundStyle(Color.inkSecondary)
             }
         }
         .padding(18)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
-        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
+        .heroCardStyle()
+    }
+
+    @ViewBuilder
+    private func analysisSectionView(_ section: AnalysisSection) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(section.title)
+                .font(.display(16))
+                .foregroundStyle(Color.inkPrimary)
+
+            if let highlight = section.highlight {
+                Text(highlight)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.terra)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.terra.opacity(0.10))
+                    .clipShape(Capsule())
+            }
+
+            if let body = section.body {
+                Text(body)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.inkSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let meals = section.meals {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(meals) { meal in
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "fork.knife")
+                                .font(.system(size: 13))
+                                .foregroundStyle(Color.warmBrown)
+                                .frame(width: 18)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(meal.name)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(Color.inkPrimary)
+                                Text("\(meal.portions) · \(meal.macros)")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.inkSecondary)
+                            }
+                        }
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
     }
 }
 
@@ -244,24 +384,35 @@ private struct WeightChart: View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 SectionLabel(text: "Gewichtsverlauf")
-                Text("Ø 5 Messungen · 30 Tage")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.inkSecondary)
+                Text("30 Tage · Ø 7 Messungen")
+                    .font(.display(19))
+                    .foregroundStyle(Color.inkPrimary)
             }
 
             Chart(chartData) { point in
+                AreaMark(
+                    x: .value("Datum", point.day),
+                    yStart: .value("kg", yMin),
+                    yEnd: .value("kg", point.kg)
+                )
+                .interpolationMethod(.monotone)
+                .foregroundStyle(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color.terra.opacity(0.15), location: 0.0),
+                            .init(color: Color.terra.opacity(0.0),  location: 0.75)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 LineMark(
                     x: .value("Datum", point.day),
                     y: .value("kg", point.kg)
                 )
-                .interpolationMethod(.catmullRom)
+                .interpolationMethod(.monotone)
                 .foregroundStyle(Color.terra)
-                PointMark(
-                    x: .value("Datum", point.day),
-                    y: .value("kg", point.kg)
-                )
-                .foregroundStyle(Color.terra)
-                .symbolSize(30)
+                .lineStyle(StrokeStyle(lineWidth: 2.5))
             }
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day, count: 10)) { _ in
@@ -271,13 +422,11 @@ private struct WeightChart: View {
                 }
             }
             .chartYScale(domain: yMin...yMax)
+            .chartPlotStyle { $0.background(.clear) }
             .frame(height: 180)
         }
         .padding(18)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
-        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
+        .heroCardStyle()
     }
 }
 
@@ -399,8 +548,8 @@ private struct FiberProgressBar: View {
                 VStack(alignment: .leading, spacing: 2) {
                     SectionLabel(text: "Ballaststoffe")
                     Text("Tagesziel 35 g")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.inkSecondary)
+                        .font(.display(19))
+                        .foregroundStyle(Color.inkPrimary)
                 }
                 Spacer()
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
@@ -427,10 +576,7 @@ private struct FiberProgressBar: View {
             .frame(height: 10)
         }
         .padding(18)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
-        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
+        .heroCardStyle()
     }
 }
 
@@ -450,6 +596,16 @@ private struct WeeklyKcalChart: View {
         let isToday: Bool
     }
 
+    @Environment(\.coachmarkDemoMode) private var coachmarkDemo
+
+    /// Tagesziel für RuleMark + Header-Pill. In Demo-Modus fallback wenn Profil fehlt.
+    private var displayBaseTarget: Double? {
+        if let p = profile {
+            return p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
+        }
+        return coachmarkDemo ? CoachmarkDemoData.fallbackDailyTarget : nil
+    }
+
     private var chartData: [DayData] {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
@@ -459,15 +615,24 @@ private struct WeeklyKcalChart: View {
         let baseTarget: Double
         if let p = profile {
             baseTarget = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
+        } else if coachmarkDemo {
+            baseTarget = CoachmarkDemoData.fallbackDailyTarget
         } else {
             baseTarget = 0
         }
         return (0..<7).compactMap { offset -> DayData? in
             guard let day = cal.date(byAdding: .day, value: -(6 - offset), to: today) else { return nil }
-            let kcal = entries
-                .filter { cal.isDate($0.date, inSameDayAs: day) }
-                .reduce(0) { $0 + $1.kcal }
-            let workout = workoutKcals[day] ?? 0
+            let kcal: Double
+            let workout: Double
+            if coachmarkDemo {
+                kcal = CoachmarkDemoData.weeklyKcals[offset]
+                workout = 0
+            } else {
+                kcal = entries
+                    .filter { cal.isDate($0.date, inSameDayAs: day) }
+                    .reduce(0) { $0 + $1.kcal }
+                workout = workoutKcals[day] ?? 0
+            }
             let effective = baseTarget > 0 ? baseTarget + workout : 0
             let isToday = cal.isDateInToday(day)
             return DayData(day: day, kcal: kcal, effectiveTarget: effective, label: fmt.string(from: day), isToday: isToday)
@@ -484,9 +649,8 @@ private struct WeeklyKcalChart: View {
                         .foregroundStyle(Color.inkPrimary)
                 }
                 Spacer()
-                if let p = profile {
-                    let base = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
-                    Text("Ziel \(Int(base)) kcal")
+                if let displayTarget = displayBaseTarget {
+                    Text("Ziel \(Int(displayTarget)) kcal")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color.warmBrown)
                         .padding(.horizontal, 10)
@@ -505,9 +669,8 @@ private struct WeeklyKcalChart: View {
                     .foregroundStyle(barColor(for: d))
                     .cornerRadius(6)
                 }
-                if let p = profile {
-                    let base = p.goalType == .deficit ? p.bmr - p.kcalDelta : p.bmr + p.kcalDelta
-                    RuleMark(y: .value("Ziel", base))
+                if let displayTarget = displayBaseTarget {
+                    RuleMark(y: .value("Ziel", displayTarget))
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5]))
                         .foregroundStyle(Color.warmBrown.opacity(0.6))
                 }
@@ -521,16 +684,43 @@ private struct WeeklyKcalChart: View {
             .frame(height: 160)
         }
         .padding(18)
-        .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color(hex: 0x7C5E3C).opacity(0.08), lineWidth: 1))
-        .shadow(color: Color(hex: 0x7C5E3C).opacity(0.06), radius: 20, x: 0, y: 8)
+        .heroCardStyle()
     }
 
+    /// Bar-Color logic:
+    /// - Goal-aware (Defizit/Maintenance/Surplus)
+    /// - ±5% vom Ziel → forest (perfekt)
+    /// - ±5–15% → amber (leichte Abweichung)
+    /// - >±15% in ungewünschter Richtung → terra (deutliche Abweichung)
+    /// - Heute: volle Sättigung; andere Tage: 0.7 Opacity
     private func barColor(for d: DayData) -> Color {
-        if d.isToday { return .terra }
-        guard d.effectiveTarget > 0 else { return .beige }
-        return d.kcal > d.effectiveTarget ? Color.terra.opacity(0.7) : Color.forest.opacity(0.7)
+        guard d.effectiveTarget > 0 else {
+            return d.isToday ? .beige : .beige.opacity(0.6)
+        }
+        let ratio = d.kcal / d.effectiveTarget
+        let deviation = ratio - 1.0   // positiv = über, negativ = unter
+
+        let goalType = profile?.goalType ?? .maintenance
+        let base: Color
+        switch goalType {
+        case .deficit:
+            // Defizit: unter oder leicht über Ziel = gut
+            if deviation <= 0.05      { base = .forest }
+            else if deviation <= 0.15 { base = .amber }
+            else                      { base = .terra }
+        case .maintenance:
+            // Halten: nah am Ziel in beide Richtungen
+            if abs(deviation) <= 0.05      { base = .forest }
+            else if abs(deviation) <= 0.15 { base = .amber }
+            else                           { base = .terra }
+        case .surplus:
+            // Aufbau: über oder leicht unter Ziel = gut
+            if deviation >= -0.05      { base = .forest }
+            else if deviation >= -0.15 { base = .amber }
+            else                       { base = .terra }
+        }
+
+        return d.isToday ? base : base.opacity(0.7)
     }
 }
 

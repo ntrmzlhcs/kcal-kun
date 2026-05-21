@@ -28,7 +28,13 @@ struct OnboardingView: View {
     @State private var selectedPhotoData: Data? = nil
     @State private var showImagePicker = false
 
-    private let totalSteps = 5
+    private let totalSteps = 6
+
+    private var stepCounterLabel: String {
+        "Schritt \(step + 1) von \(totalSteps)"
+    }
+
+    @AppStorage("shouldStartTourAfterOnboarding") private var shouldStartTour = false
 
     private let activities: [(id: String, label: String, desc: String)] = [
         ("low",      "Wenig aktiv",  "Bürojob, kaum Sport"),
@@ -74,6 +80,7 @@ struct OnboardingView: View {
                     case 1: stepGoal
                     case 2: stepDiet
                     case 3: stepAvatar
+                    case 4: stepAPIKey
                     default: stepReady
                     }
                 }
@@ -86,41 +93,60 @@ struct OnboardingView: View {
                 Spacer()
 
                 // Navigation buttons
-                HStack(spacing: 10) {
-                    if step > 0 {
+                VStack(spacing: 10) {
+                    HStack(spacing: 10) {
+                        if step > 0 {
+                            Button {
+                                withAnimation { step -= 1 }
+                            } label: {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .frame(width: 56, height: 56)
+                                    .background(Color.cardBackground)
+                                    .foregroundStyle(Color.inkSecondary)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color(hex: 0x7C5E3C).opacity(0.18), lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                        }
+
                         Button {
-                            withAnimation { step -= 1 }
+                            withAnimation {
+                                if step < totalSteps - 1 {
+                                    step += 1
+                                } else {
+                                    finishOnboardingWithTour()
+                                }
+                            }
                         } label: {
-                            Image(systemName: "chevron.left")
+                            Text(ctaLabel)
                                 .font(.system(size: 16, weight: .semibold))
-                                .frame(width: 56, height: 56)
-                                .background(Color.cardBackground)
-                                .foregroundStyle(Color.inkSecondary)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Color(hex: 0x7C5E3C).opacity(0.18), lineWidth: 1))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(Color.terra)
+                                .foregroundStyle(.white)
+                                .clipShape(Capsule())
+                                .shadow(color: Color.terra.opacity(0.32), radius: 18, x: 0, y: 8)
                         }
                         .buttonStyle(.plain)
                     }
 
-                    Button {
-                        withAnimation {
-                            if step < totalSteps - 1 {
-                                step += 1
-                            } else {
-                                finishOnboarding()
-                            }
+                    // Sekundäre Option am Ende des Onboardings: Tour überspringen
+                    if step == totalSteps - 1 {
+                        Button {
+                            finishOnboardingDirect()
+                        } label: {
+                            Text("Tagebuch öffnen")
+                                .font(.system(size: 15, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.cardBackground)
+                                .foregroundStyle(Color.warmBrown)
+                                .clipShape(Capsule())
+                                .overlay(Capsule().stroke(Color(hex: 0x7C5E3C).opacity(0.25), lineWidth: 1))
                         }
-                    } label: {
-                        Text(ctaLabel)
-                            .font(.system(size: 16, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(Color.terra)
-                            .foregroundStyle(.white)
-                            .clipShape(Capsule())
-                            .shadow(color: Color.terra.opacity(0.32), radius: 18, x: 0, y: 8)
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 22)
                 .padding(.bottom, 32)
@@ -138,7 +164,7 @@ struct OnboardingView: View {
     private var ctaLabel: String {
         switch step {
         case 0: return "Los geht's"
-        case totalSteps - 1: return "Tagebuch öffnen"
+        case totalSteps - 1: return "Tour starten"
         default: return "Weiter"
         }
     }
@@ -187,7 +213,7 @@ struct OnboardingView: View {
     private var stepGoal: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Schritt 2 von 4")
+                SectionLabel(text: stepCounterLabel)
                     .padding(.bottom, 4)
 
                 Group {
@@ -394,7 +420,7 @@ struct OnboardingView: View {
     private var stepDiet: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Schritt 3 von 5")
+                SectionLabel(text: stepCounterLabel)
                     .padding(.bottom, 4)
 
                 Group {
@@ -480,7 +506,7 @@ struct OnboardingView: View {
     private var stepAvatar: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Schritt 3 von 4")
+                SectionLabel(text: stepCounterLabel)
                     .padding(.bottom, 4)
 
                 Group {
@@ -589,6 +615,15 @@ struct OnboardingView: View {
     }
 
     // MARK: — Step 3: Bereit
+
+    private var stepAPIKey: some View {
+        APIKeySetupView(
+            mode: .embedded,
+            onDone: { withAnimation { step += 1 } },
+            onSkip: { withAnimation { step += 1 } }
+        )
+        .frame(maxWidth: .infinity)
+    }
 
     private var stepReady: some View {
         VStack(spacing: 0) {
@@ -712,12 +747,25 @@ struct OnboardingView: View {
         }()
         profile.bmr       = kcalGoal
         profile.kcalDelta = effectiveDelta
-        profile.goalType  = selectedGoal
+        profile.goalType  = isMaintenanceGoal ? .maintenance : selectedGoal
         profile.dietStyle = selectedDietStyle
         profile.photoData = selectedPhotoData
         try? modelContext.save()
 
         savedMascotTone = mascotTone
         hasCompletedOnboarding = true
+    }
+
+    /// User wählt am Ende „Tour starten": Flag setzen, dann onboarding abschliessen.
+    /// MainTabView's `.onAppear` liest den Flag und triggert die Tour nach ~0.5s.
+    private func finishOnboardingWithTour() {
+        shouldStartTour = true
+        finishOnboarding()
+    }
+
+    /// User wählt am Ende „Tagebuch öffnen": Tour-Flag explizit zurücksetzen.
+    private func finishOnboardingDirect() {
+        shouldStartTour = false
+        finishOnboarding()
     }
 }

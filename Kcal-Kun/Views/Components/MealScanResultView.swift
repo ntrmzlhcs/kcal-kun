@@ -56,6 +56,7 @@ struct MealScanResultView: View {
                                     DatePicker("", selection: $selectedDate, displayedComponents: .date)
                                         .labelsHidden()
                                         .tint(Color.terra)
+                                        .environment(\.locale, Locale(identifier: "de_CH"))
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)

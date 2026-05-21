@@ -35,7 +35,11 @@ final class ScannerViewModel {
         showConfirmation = true
     }
 
-    func saveProduct(name: String, result: NutritionScanResult, context: ModelContext) {
+    /// Speichert das gescannte Produkt. Wenn `barcode` gesetzt ist (z. B. weil
+    /// der User aus dem Barcode-Not-Found-Flow heraus über OCR erfasst hat),
+    /// wird er auf das Product geschrieben — damit der nächste Scan denselben
+    /// Code lokal findet.
+    func saveProduct(name: String, result: NutritionScanResult, context: ModelContext, barcode: String? = nil) {
         let product = Product(
             name: name,
             kcalPer100g: result.kcalPer100g ?? 0,
@@ -45,7 +49,8 @@ final class ScannerViewModel {
             fiberPer100g: result.fiberPer100g,
             sugarPer100g: result.sugarPer100g,
             saltPer100g: result.saltPer100g,
-            source: .ocr
+            source: .ocr,
+            barcode: barcode
         )
         context.insert(product)
         try? context.save()

@@ -7,6 +7,10 @@ struct ScanConfirmationView: View {
 
     let vm: ScannerViewModel
     let initialResult: NutritionScanResult
+    /// Optional: EAN-Code, falls dieser OCR-Save aus dem Barcode-Not-Found-Flow
+    /// kommt. Wird beim Speichern auf das Product persistiert, sodass derselbe
+    /// Scan beim nächsten Mal lokal getroffen wird.
+    let prefilledBarcode: String?
 
     @State private var name: String
     @State private var kcal: String
@@ -18,9 +22,10 @@ struct ScanConfirmationView: View {
     @State private var salt: String
     @State private var showOptional = false
 
-    init(vm: ScannerViewModel, result: NutritionScanResult) {
+    init(vm: ScannerViewModel, result: NutritionScanResult, prefilledBarcode: String? = nil) {
         self.vm = vm
         self.initialResult = result
+        self.prefilledBarcode = prefilledBarcode
         _name = State(initialValue: result.productNameGuess ?? "")
         _kcal = State(initialValue: result.kcalPer100g.map { formatDouble($0) } ?? "")
         _protein = State(initialValue: result.proteinPer100g.map { formatDouble($0) } ?? "")
@@ -231,7 +236,8 @@ struct ScanConfirmationView: View {
         vm.saveProduct(
             name: name.trimmingCharacters(in: .whitespaces),
             result: result,
-            context: modelContext
+            context: modelContext,
+            barcode: prefilledBarcode
         )
         dismiss()
     }

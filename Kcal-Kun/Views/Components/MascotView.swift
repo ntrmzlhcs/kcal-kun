@@ -122,6 +122,10 @@ struct MascotView: View {
         }
         .frame(width: size, height: size)
         .rotationEffect(.degrees(tilt))
+        // Maskottchen ist meist dekorativ. Wo es eine semantische Rolle hat
+        // (z. B. Onboarding-Mascot-Header), kann der Aufrufer den Modifier
+        // mit einem expliziten `.accessibilityLabel("...")` überschreiben.
+        .accessibilityHidden(true)
     }
 
     // MARK: Eyes

@@ -7,10 +7,6 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
 
-configFiles:
-  Debug: Secrets.xcconfig
-  Release: Secrets.xcconfig
-
 settings:
   base:
     SWIFT_VERSION: "6.0"

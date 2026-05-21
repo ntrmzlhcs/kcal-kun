@@ -18,14 +18,16 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>GEMINI_API_KEY</key>
-	<string>$(GEMINI_API_KEY)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.healthcare-fitness</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Kcal-Kun verwendet die Fotobibliothek für dein Profilfoto.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Kcal-Kun verwendet die Kamera, um Nährwerttabellen auf Verpackungen zu scannen.</string>
+	<string>Kcal-Kun verwendet die Kamera, um Nährwerttabellen, Mahlzeiten und Barcodes auf Lebensmittel-Verpackungen zu scannen. Die Aufnahmen werden lokal verarbeitet und nur für die KI-Analyse direkt an Google Gemini gesendet (mit deinem eigenen API-Key).</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Kcal-Kun liest Bewegungskalorien aus Workouts für die Tagesübersicht.</string>
+	<string>Kcal-Kun liest Trainings-Kalorien und (optional) dein Gewicht aus der Health-App, um deine Tagesbilanz und Gewichts-Trends darzustellen. Diese Daten bleiben auf deinem iPhone — nur wenn du die KI-Ernährungsanalyse aktiv startest, werden sie an Google Gemini gesendet.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>InstrumentSerif-Regular.ttf</string>
