@@ -19,7 +19,7 @@ Kcal-Kun ist ein iOS-Kalorientagebuch, das ohne Backend-Server auskommt. Deine D
 
 ## 2. Daten, die das Gerät verlassen
 
-Es gibt drei Funktionen, die Daten an Google Gemini senden — **alle direkt von deinem iPhone, mit deinem persönlichen API-Key**:
+Es gibt vier Funktionen, die Daten an externe Server senden — **alle direkt von deinem iPhone**:
 
 ### 2.1 OCR-Scanner (Nährwerttabelle fotografieren)
 
@@ -46,7 +46,16 @@ Es gibt drei Funktionen, die Daten an Google Gemini senden — **alle direkt von
 - **Zweck:** Personalisierte Ernährungs-Auswertung mit Mustern und Mahlzeit-Vorschlägen
 - **Speicherung bei Google:** wie oben
 
-**Wichtig:** Alle drei Calls erfolgen direkt von deinem iPhone an Google's Server, **authentifiziert mit deinem eigenen Gemini-API-Key**. Der App-Anbieter (Martin Schulz) hat zu keinem Zeitpunkt Zugriff auf deine Bilder, Tagebuch-Daten oder deinen API-Key.
+**Wichtig:** Diese drei Calls erfolgen direkt von deinem iPhone an Google's Server, **authentifiziert mit deinem eigenen Gemini-API-Key**. Der App-Anbieter (Martin Schulz) hat zu keinem Zeitpunkt Zugriff auf deine Bilder, Tagebuch-Daten oder deinen API-Key.
+
+### 2.4 Barcode-Scanner (Open Food Facts)
+
+- **Verarbeitete Daten:** Der gescannte EAN-/UPC-Barcode (z. B. `7613034626844`) — ein numerischer Strichcode auf der Produktverpackung.
+- **Empfänger:** Open Food Facts (gemeinnütziger Verein, Sitz in Frankreich)
+- **Zweck:** Abfrage der Nährwerte des Produkts aus der offenen Lebensmittel-Datenbank.
+- **Speicherung bei Open Food Facts:** Anonyme Server-Logs (IP-Adresse, Zeitstempel, abgefragter Barcode) — gemäss [Open-Food-Facts-Datenschutzerklärung](https://world.openfoodfacts.org/cgi/privacy.pl). Keine Account-Daten, keine personenbezogenen Daten, kein User-Identifier.
+
+**Wichtig:** An Open Food Facts wird **ausschliesslich** der Barcode-String übermittelt — keine Tagebuch-Daten, keine HealthKit-Werte, keine personenbezogenen Informationen.
 
 ---
 
@@ -79,7 +88,19 @@ Da die Datenübermittlung direkt über deinen persönlichen API-Key erfolgt, **l
 
 Datenübermittlung in die USA: Google verfügt über entsprechende DSGVO-Konformitätsmechanismen (Standardvertragsklauseln, Data Privacy Framework).
 
-### 4.2 Apple Inc.
+### 4.2 Open Food Facts (gemeinnütziger Verein, Frankreich)
+
+Wenn du den Barcode-Scanner nutzt, baut die App eine direkte Verbindung mit den Servern von Open Food Facts auf, um den gescannten Code abzufragen.
+
+- **Lizenz der Daten:** Open Database License (ODbL) — frei kommerziell nutzbar.
+- **Übertragen wird:** ausschliesslich der numerische Strichcode (z. B. EAN-13) — keine personenbezogenen Daten, kein User-Identifier, kein API-Key.
+- **Daten-Standort:** Server in Frankreich (EU/EWR — DSGVO-konform).
+- **Privacy Policy:** [world.openfoodfacts.org/cgi/privacy.pl](https://world.openfoodfacts.org/cgi/privacy.pl)
+- **Über Open Food Facts:** [world.openfoodfacts.org](https://world.openfoodfacts.org)
+
+Open Food Facts ist ein crowd-sourced Projekt, das Lebensmittel-Daten von Freiwilligen erfasst und unter offener Lizenz zugänglich macht.
+
+### 4.3 Apple Inc.
 
 Der App-Kauf (einmalig CHF 4.90) wird über Apple's App Store abgewickelt. Apple verarbeitet die Zahlung gemäß deren Datenschutzrichtlinie.
 
