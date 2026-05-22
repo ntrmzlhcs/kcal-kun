@@ -8,6 +8,9 @@ struct KcalKunApp: App {
     /// auf einen frischen Store ausweichen mussten. Wird im UI als Banner gezeigt.
     let didRecoverFromCorruptStore: Bool
     @State private var healthKit = HealthKitService()
+    /// SwiftUI-Splash-Screen-Dauer. Wird beim ersten Render auf false gesetzt
+    /// via .task — gibt dem User 2 s Cozy-Start-Moment bevor das Tagebuch erscheint.
+    @State private var showSplash = true
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
@@ -90,20 +93,38 @@ struct KcalKunApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if hasCompletedOnboarding {
-                    MainTabView()
+            ZStack {
+                Group {
+                    if hasCompletedOnboarding {
+                        MainTabView()
+                            .task {
+                                await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
+                                await healthKit.requestAuthorizationAndFetch()
+                                // Einmaliges Cleanup von BLV-Duplikat-Stubs aus alten
+                                // Backup-Restore-Pfaden (siehe ProductCleanupService).
+                                ProductCleanupService.cleanupBLVStubs(context: modelContainer.mainContext)
+                            }
+                    } else {
+                        OnboardingView()
+                            .task {
+                                await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
+                            }
+                    }
+                }
+
+                // SwiftUI-Splash-Screen — überlagert die App-UI für 2 Sekunden,
+                // fadet dann sanft aus. Die echte App ist im Hintergrund schon
+                // gemountet (`.task`-Modifier laufen bereits) → kein zusätzliches
+                // Loading-Wait nach dem Splash.
+                if showSplash {
+                    SplashScreenView()
+                        .transition(.opacity)
+                        .zIndex(1000)
                         .task {
-                            await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
-                            await healthKit.requestAuthorizationAndFetch()
-                            // Einmaliges Cleanup von BLV-Duplikat-Stubs aus alten
-                            // Backup-Restore-Pfaden (siehe ProductCleanupService).
-                            ProductCleanupService.cleanupBLVStubs(context: modelContainer.mainContext)
-                        }
-                } else {
-                    OnboardingView()
-                        .task {
-                            await DataSeeder.seedIfNeeded(context: modelContainer.mainContext)
+                            try? await Task.sleep(nanoseconds: 2_000_000_000)
+                            withAnimation(.easeOut(duration: 0.45)) {
+                                showSplash = false
+                            }
                         }
                 }
             }

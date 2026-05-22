@@ -63,6 +63,7 @@
 		AB1100000000000000000027 /* BarcodeScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000027 /* BarcodeScannerViewModel.swift */; };
 		AB1100000000000000000028 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000028 /* Logging.swift */; };
 		AB1100000000000000000029 /* KcalKunLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000029 /* KcalKunLoadingView.swift */; };
+		AB1100000000000000000030 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2200000000000000000030 /* SplashScreenView.swift */; };
 		F6A9CB2A74B38F4E94D088F9 /* KcalKunApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6085A7D03A40EE2AE7380F6F /* KcalKunApp.swift */; };
 		F832D6677C8F7EFC34744C3F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 564CFA5F9EAAEF2FC29273BB /* Assets.xcassets */; };
 		FBE064D05FADB5933DB36ABA /* Product.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA34AC6D29608E2EEC481963 /* Product.swift */; };
@@ -137,6 +138,7 @@
 		AB2200000000000000000027 /* BarcodeScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScannerViewModel.swift; sourceTree = "<group>"; };
 		AB2200000000000000000028 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		AB2200000000000000000029 /* KcalKunLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalKunLoadingView.swift; sourceTree = "<group>"; };
+		AB2200000000000000000030 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
 		E73498C8E756F40E77C0ACB7 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 		EA6672F87448E0513470FD6F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		FA9CF46334E244489606E48F /* KcalProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcalProgressView.swift; sourceTree = "<group>"; };
@@ -193,6 +195,7 @@
 				B290406F36C8A8745A392294 /* StatsView.swift */,
 				AB2200000000000000000003 /* OnboardingView.swift */,
 				AB2200000000000000000018 /* AboutAppView.swift */,
+				AB2200000000000000000030 /* SplashScreenView.swift */,
 				068BA48B2C1B2113315D033B /* Components */,
 				AB3300000000000000000001 /* Coachmark */,
 			);
@@ -420,6 +423,7 @@
 				AB1100000000000000000027 /* BarcodeScannerViewModel.swift in Sources */,
 				AB1100000000000000000028 /* Logging.swift in Sources */,
 				AB1100000000000000000029 /* KcalKunLoadingView.swift in Sources */,
+				AB1100000000000000000030 /* SplashScreenView.swift in Sources */,
 				7009D487EBA549A3A0411A2A /* HealthKitService.swift in Sources */,
 				97D3B417A1EBC9DC860B88E7 /* DataSeeder.swift in Sources */,
 				5B391E892F7D15ED00E92EFB /* MealScannerViewModel.swift in Sources */,
