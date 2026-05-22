@@ -26,7 +26,7 @@ struct BackupExportView: View {
                             .foregroundStyle(Color.inkPrimary)
 
                         Text("Alle Tagebuch-Einträge, eigene Produkte und dein Profil werden in einer einzelnen Datei gesichert. Speichere sie in iCloud Drive, schick sie dir per Mail oder per AirDrop auf den Mac.")
-                            .font(.system(size: 14))
+                            .font(.callout)
                             .foregroundStyle(Color.inkSecondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 28)
@@ -109,10 +109,10 @@ struct BackupExportView: View {
                 .padding(.top, 1)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Backup ist unverschlüsselt")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.warmBrown)
                 Text("Die Datei enthält Tagebuch, Gewicht und Profil im Klartext. Speichere sie nur an sicheren Orten (iCloud Drive ist OK, öffentliche Cloud-Dienste oder unverschlüsselte Mail-Anhänge nicht).")
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .foregroundStyle(Color.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

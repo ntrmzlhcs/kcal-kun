@@ -272,17 +272,8 @@ private struct NutritionAnalysisCard: View {
             Divider().overlay(Color.inkDivider)
 
             if isLoading {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        ProgressView().tint(Color.terra)
-                        Text("Gemini analysiert…")
-                            .font(.system(size: 13))
-                            .foregroundStyle(Color.inkSecondary)
-                    }
-                    Spacer()
-                }
-                .padding(.vertical, 8)
+                KcalKunLoadingView(label: "Gemini analysiert …", compact: true)
+                    .padding(.vertical, 8)
             } else if let error {
                 Text(error)
                     .font(.system(size: 13))

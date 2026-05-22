@@ -486,7 +486,7 @@ struct AddEntryView: View {
         guard let product = selectedProduct, let g = grams, g > 0 else { return }
         let entry = DiaryEntry(date: selectedDate, mealSlot: selectedSlot, product: product, grams: g, unit: useMl ? "ml" : "g")
         modelContext.insert(entry)
-        try? modelContext.save()
+        modelContext.saveOrLog("AddEntry: DiaryEntry geloggt")
         dismiss()
     }
 

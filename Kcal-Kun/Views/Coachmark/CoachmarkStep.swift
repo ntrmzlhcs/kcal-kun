@@ -18,6 +18,8 @@ enum AccessoryKind {
     case confetti
     case scale
     case lightbulb
+    case barcode
+    case shield
 }
 
 enum PrimaryTint {
@@ -80,7 +82,14 @@ let COACH_STEPS: [CoachmarkStep] = [
           body:  "Alles, was du loggst, landet hier — plus 1'200 vorgeladene Schweizer Lebensmittel. Markiere Favoriten für schnellen Zugriff.",
           primaryCTA: "Weiter", primaryTint: .dark, showsBack: true),
 
-    // Step 6 — Etikett-Scanner
+    // Step 6 — Barcode-Scanner (schnellster Logging-Weg)
+    .init(tab: .scanner, target: .scannerBarcodeBtn, spotCornerRadius: 28, placement: .rightOfMascot,
+          mood: .smug,   tone: .cream, tilt:  4,  accessory: .barcode,
+          title: "Barcode scannen",
+          body:  "Der schnellste Weg: halte die Kamera auf den Strichcode einer Verpackung — Kcal-Kun zieht die Nährwerte sofort aus Open Food Facts.",
+          primaryCTA: "Weiter", primaryTint: .dark, showsBack: true),
+
+    // Step 7 — Etikett-Scanner
     .init(tab: .scanner, target: .scannerLabelBtn,   spotCornerRadius: 28, placement: .rightOfMascot,
           mood: .scan,   tone: .cream, tilt: -10, accessory: .magnifier,
           title: "Etikett scannen",
@@ -115,7 +124,27 @@ let COACH_STEPS: [CoachmarkStep] = [
           body:  "Eine persönliche Auswertung der letzten 30 Tage — Stärken, Schwächen und konkrete Mahlzeit-Vorschläge.",
           primaryCTA: "Weiter", primaryTint: .dark, showsBack: true),
 
-    // Step 11 — Finale (Center, Konfetti)
+    // Step 12 — Profil-Icon (smooth-transition Stepping-Stone vor Backup-Step)
+    // Spotlight auf den Avatar oben links — User sieht WO das Profil sitzt,
+    // bevor das Sheet sich öffnet.
+    .init(tab: .diary,   target: .profileButton,     spotCornerRadius: 22, placement: .rightOfMascot,
+          mood: .happy,  tone: .cream, tilt:  3,  accessory: .target,
+          title: "Dein Profil",
+          body:  "Oben links findest du dein Profil: Tagesziel anpassen, Avatar wechseln — und der Backup-Bereich, den ich dir gleich zeige.",
+          primaryCTA: "Profil öffnen", primaryTint: .dark, showsBack: true),
+
+    // Step 13 — Backup (öffnet automatisch den Profile-Sheet via DiaryView's
+    // Notification-Handler. Im Sheet rendert ProfileView ein eingebettetes
+    // CoachmarkOverlay mit dem gleichen Look wie alle anderen Steps — gleiches
+    // dim-Layer + Spotlight um die Backup-Row + Bubble darunter. cornerRadius
+    // 16 matched zur Backup-Row's RoundedRectangle.)
+    .init(tab: .diary,   target: .profileBackupBtn,  spotCornerRadius: 16, placement: .rightOfMascot,
+          mood: .smug,   tone: .beige, tilt: -2,  accessory: .shield,
+          title: "Sicher deine Daten",
+          body:  "Im Profil → „Daten sichern\" exportierst du jederzeit ein Backup (Tagebuch + Bibliothek + Profil). Speichere es in iCloud Drive oder per AirDrop — perfekt vor dem Wechsel des iPhones.",
+          primaryCTA: "Weiter", primaryTint: .dark, showsBack: true),
+
+    // Step 13 — Finale (Center, Konfetti)
     .init(tab: .diary,   target: nil,                spotCornerRadius:  0, placement: .center,
           mood: .smug,   tone: .terra, tilt:  0,  accessory: .confetti,
           title: "Du bist startklar!",

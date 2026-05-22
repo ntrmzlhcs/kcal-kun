@@ -12,7 +12,7 @@ struct DataSeeder {
             try reseedBLV(context: context)
             UserDefaults.standard.set(true, forKey: seededKey)
         } catch {
-            print("[DataSeeder] Fehler beim Seeden: \(error)")
+            Log.data.error("DataSeeder: Fehler beim Seeden: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -41,7 +41,7 @@ struct DataSeeder {
             ))
         }
         try context.save()
-        print("[DataSeeder] \(items.count) BLV-Produkte geladen.")
+        Log.data.info("DataSeeder: \(items.count, privacy: .public) BLV-Produkte geladen.")
     }
 }
 

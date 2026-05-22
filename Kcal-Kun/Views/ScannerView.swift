@@ -235,6 +235,7 @@ struct ScannerView: View {
                     }
                     .buttonStyle(.plain)
                     .frame(maxWidth: .infinity)
+                    .coachmarkTarget(.scannerBarcodeBtn)
 
                     Button {
                         triggerLabelScanner()
@@ -259,7 +260,7 @@ struct ScannerView: View {
                             showAPIKeySetup = true
                         }
                     } label: {
-                        Label("Gericht analysieren", systemImage: "frying.pan")
+                        Label("Gericht analysieren", systemImage: "fork.knife")
                             .font(.system(size: 14, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -325,6 +326,9 @@ struct ScannerView: View {
                     .padding(.bottom, 4)
                 Divider().overlay(Color.inkDivider)
                     .padding(.bottom, 4)
+                // ScanLine als Overlay über die Nährwert-Zeilen — damit die rote
+                // Linie über den Text sweept (klassischer „Scanner liest Etikett"-
+                // Effekt), nicht im leeren Bereich unter den Zeilen animiert.
                 Group {
                     labelLine("Energie", "142 kcal")
                     labelLine("Fett", "4.2 g")
@@ -332,9 +336,8 @@ struct ScannerView: View {
                     labelLine("Protein", "8.1 g")
                     labelLine("Salz", "0.3 g")
                 }
-                // Scan line animation
-                if isLoading {
-                    ScanLine()
+                .overlay(alignment: .top) {
+                    if isLoading { ScanLine() }
                 }
             }
             .font(.system(size: 9, design: .monospaced))
@@ -523,20 +526,15 @@ private struct BobAnimationModifier: ViewModifier {
 }
 
 /// Mini-Sheet während Open-Food-Facts-Lookup. Sehr klein gehalten — der Call
-/// dauert typisch <1 s, kein UI-Overkill nötig.
+/// dauert typisch <1 s, kein UI-Overkill nötig. Nutzt die einheitliche
+/// `KcalKunLoadingView` für visuelle Konsistenz mit anderen Loading-States.
 struct BarcodeLookingSheet: View {
     var body: some View {
-        VStack(spacing: 18) {
-            MascotView(size: 80, mood: .scan, tone: .cream, tilt: -4)
-            Text("Suche in Open Food Facts …")
-                .font(.system(size: 14))
-                .foregroundStyle(Color.inkSecondary)
-            ProgressView().tint(Color.terra)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
-        .presentationDetents([.height(220)])
-        .interactiveDismissDisabled()
+        KcalKunLoadingView(label: "Suche in Open Food Facts …")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.appBackground)
+            .presentationDetents([.height(220)])
+            .interactiveDismissDisabled()
     }
 }
 

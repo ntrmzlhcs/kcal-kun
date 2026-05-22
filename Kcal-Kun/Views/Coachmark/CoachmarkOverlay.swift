@@ -114,9 +114,18 @@ struct CoachmarkOverlay: View {
 
     private func chromeTop(insets: EdgeInsets) -> some View {
         HStack {
-            counterPill
-            Spacer()
-            closePill
+            // Wenn der Spotlight oben links liegt (z. B. Profil-Avatar in der
+            // Toolbar), würde der Counter-Pill ihn überdecken. In dem Fall
+            // beide Pills nach rechts verschieben.
+            if step.target == .profileButton {
+                Spacer()
+                counterPill
+                closePill
+            } else {
+                counterPill
+                Spacer()
+                closePill
+            }
         }
         .padding(.horizontal, 18)
         .padding(.top, insets.top + 8)
@@ -146,13 +155,15 @@ struct CoachmarkOverlay: View {
                     .font(.system(size: 10, weight: .bold))
             }
             .foregroundStyle(Color.warmBrown)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .background(Color.white.opacity(0.95))
             .clipShape(Capsule())
             .shadow(color: .black.opacity(0.18), radius: 14, y: 6)
         }
         .buttonStyle(.plain)
+        .frame(minHeight: 44)
+        .accessibilityLabel("Tour beenden")
     }
 
     // MARK: - Bottom-Chrome

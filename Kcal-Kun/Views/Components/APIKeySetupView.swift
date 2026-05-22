@@ -34,7 +34,9 @@ struct APIKeySetupView: View {
     var body: some View {
         switch mode {
         case .embedded:
-            content
+            // Embedded im Onboarding: ScrollView damit der Privacy-Hinweis
+            // unten erreichbar ist (sonst je nach Gerätegrösse abgeschnitten).
+            ScrollView(showsIndicators: false) { content }
         case .sheet:
             NavigationStack {
                 ZStack {
@@ -89,7 +91,7 @@ struct APIKeySetupView: View {
                     // nutzen"). Den Key kann der User jederzeit nachreichen
                     // unter Profil → KI-Setup.
                     Text("Ohne Key funktionieren Barcode-Scanner, manuelle Eingabe, Tagebuch und Statistik. Etikett-Scan, Gericht-Analyse und KI-Ernährungsanalyse brauchen den Key — du kannst ihn jederzeit später nachreichen.")
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .foregroundStyle(Color.inkTertiary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -146,7 +148,7 @@ struct APIKeySetupView: View {
                 .font(.display(28))
                 .foregroundStyle(Color.inkPrimary)
             Text("Für die KI-Features brauchst du deinen eigenen Google-Gemini-API-Key. Den bekommst du kostenlos — mit einem fairen Tageslimit, das im Alltag locker ausreicht.")
-                .font(.system(size: 13))
+                .font(.callout)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -226,6 +228,9 @@ struct APIKeySetupView: View {
                             .foregroundStyle(Color.inkTertiary)
                     }
                     .buttonStyle(.plain)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+                    .accessibilityLabel("Key-Eingabe löschen")
                 }
             }
             .padding(14)

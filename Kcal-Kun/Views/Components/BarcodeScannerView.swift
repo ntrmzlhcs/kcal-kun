@@ -93,6 +93,26 @@ final class BarcodeScannerVC: UIViewController, @preconcurrency AVCaptureMetadat
         }
         session.addInput(input)
 
+        // Autofocus für Nah-Distanz konfigurieren. Default-Fokus versucht auch
+        // Far-Objects zu treffen und „huntet" beim Barcode-Scan zwischen Nah
+        // und Fern. `.near` Range Restriction beschleunigt das dramatisch —
+        // Barcodes sind typisch 5–15 cm vor der Kamera.
+        do {
+            try device.lockForConfiguration()
+            if device.isFocusModeSupported(.continuousAutoFocus) {
+                device.focusMode = .continuousAutoFocus
+            }
+            if device.isAutoFocusRangeRestrictionSupported {
+                device.autoFocusRangeRestriction = .near
+            }
+            if device.isSmoothAutoFocusSupported {
+                device.isSmoothAutoFocusEnabled = true
+            }
+            device.unlockForConfiguration()
+        } catch {
+            Log.ui.error("Camera focus config failed: \(error.localizedDescription, privacy: .public)")
+        }
+
         let output = AVCaptureMetadataOutput()
         guard session.canAddOutput(output) else {
             showCameraError("Kamera-Output nicht möglich.")

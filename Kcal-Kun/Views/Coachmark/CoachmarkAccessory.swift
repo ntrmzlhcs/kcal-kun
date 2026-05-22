@@ -33,6 +33,8 @@ struct CoachmarkAccessory: View {
         case .confetti:   confettiView
         case .scale:      scaleView
         case .lightbulb:  lightbulbView
+        case .barcode:    barcodeView
+        case .shield:     shieldView
         }
     }
 
@@ -158,6 +160,25 @@ struct CoachmarkAccessory: View {
                 .foregroundStyle(.white)
         }
         .shadow(color: Color.amber.opacity(0.32), radius: 4, y: 2)
+    }
+
+    private var barcodeView: some View {
+        ZStack {
+            Circle().fill(Color.terra)
+            Image(systemName: "barcode.viewfinder")
+                .font(.system(size: size * 0.52, weight: .semibold))
+                .foregroundStyle(.white)
+        }
+        .shadow(color: Color.terra.opacity(0.32), radius: 4, y: 2)
+    }
+
+    private var shieldView: some View {
+        ZStack {
+            circleBg
+            Image(systemName: "shield.lefthalf.filled")
+                .font(.system(size: size * 0.52, weight: .semibold))
+                .foregroundStyle(Color.forest)
+        }
     }
 }
 

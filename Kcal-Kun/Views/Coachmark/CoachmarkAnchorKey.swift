@@ -6,11 +6,14 @@ enum CoachmarkTarget: String, Hashable, Codable {
     case macroChips
     case breakfastPlus
     case libraryFavorites
+    case scannerBarcodeBtn
     case scannerLabelBtn
     case scannerDishBtn
     case statsWeeklyChart
     case statsWeightChart
     case statsAIAnalysis
+    case profileButton
+    case profileBackupBtn
 }
 
 /// PreferenceKey, der die GLOBALEN Frames (Screen-Koordinaten) der Targets liefert.

@@ -17,6 +17,7 @@ struct DiaryView: View {
     @AppStorage("selectedMascotTone") private var savedMascotTone = "cream"
     @Environment(\.coachmarkDemoMode) private var coachmarkDemo
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(CoachmarkController.self) private var coachmarkController
 
     private var profile: UserProfile? { profiles.first }
 
@@ -172,6 +173,7 @@ struct DiaryView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showProfile = true } label: { avatarView }
                         .accessibilityLabel("Profil öffnen")
+                        .coachmarkTarget(.profileButton)
                 }
                 ToolbarItem(placement: .principal) {
                     Text("Tagebuch")
@@ -219,7 +221,7 @@ struct DiaryView: View {
                 let stale = allEntries.filter { $0.productName.isEmpty && $0.product != nil }
                 if !stale.isEmpty {
                     for entry in stale { entry.productName = entry.product!.name }
-                    try? modelContext.save()
+                    modelContext.saveOrLog("DiaryView")
                 }
             }
             .task(id: selectedDate) {
@@ -234,7 +236,21 @@ struct DiaryView: View {
                 Task { await healthKit.fetchWorkoutKcal(for: selectedDate) }
             }
             .onReceive(NotificationCenter.default.publisher(for: .coachmarkStepChanged)) { notif in
-                guard let target = notif.object as? CoachmarkTarget else { return }
+                let target = notif.object as? CoachmarkTarget
+
+                // Profile-Sheet automatisch öffnen für den Backup-Tour-Step
+                // und schliessen, sobald die Tour zu einem anderen Step
+                // weitergeht (z. B. Finale).
+                if target == .profileBackupBtn {
+                    showProfile = true
+                } else if coachmarkController.isActive, showProfile {
+                    // Tour bewegt sich weg vom Backup-Step → Sheet schliessen.
+                    // Nur tun, wenn die Tour aktiv ist — wenn der User das
+                    // Profile manuell offen hatte, lassen wir es in Ruhe.
+                    showProfile = false
+                }
+
+                guard let target = target else { return }
 
                 let scrollID: String?
                 let scrollAnchor: UnitPoint
@@ -279,7 +295,7 @@ struct DiaryView: View {
         for index in indexSet {
             modelContext.delete(slotEntries[index])
         }
-        try? modelContext.save()
+        modelContext.saveOrLog("DiaryView")
     }
 
     private func generateCSV(entries: [DiaryEntry]) -> String {
@@ -704,7 +720,7 @@ private struct DiaryEntryDetailSheet: View {
             entry.carbs   = p.carbsPer100g   * f
             entry.fiber   = (p.fiberPer100g ?? 0) * f
         }
-        try? modelContext.save()
+        modelContext.saveOrLog("DiaryView")
         dismiss()
     }
 
@@ -832,7 +848,7 @@ private struct CopyEntriesSheet: View {
             )
             modelContext.insert(newEntry)
         }
-        try? modelContext.save()
+        modelContext.saveOrLog("DiaryView")
         onDone()
         dismiss()
     }

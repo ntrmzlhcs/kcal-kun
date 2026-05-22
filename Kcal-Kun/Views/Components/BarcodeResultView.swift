@@ -391,7 +391,7 @@ struct BarcodeResultView: View {
             modelContext.insert(entry)
         }
 
-        try? modelContext.save()
+        modelContext.saveOrLog("BarcodeResult: Produkt/Eintrag gespeichert")
         dismiss()
     }
 }

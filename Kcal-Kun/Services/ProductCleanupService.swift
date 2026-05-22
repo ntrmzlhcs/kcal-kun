@@ -44,7 +44,7 @@ enum ProductCleanupService {
 
             guard !stubs.isEmpty else {
                 defaults.set(true, forKey: cleanupKey)
-                print("[ProductCleanup] Keine Duplikate gefunden — Cleanup-Flag gesetzt.")
+                Log.data.info("ProductCleanup: keine Duplikate, Flag gesetzt")
                 return
             }
 
@@ -67,10 +67,10 @@ enum ProductCleanupService {
             }
 
             try context.save()
-            print("[ProductCleanup] Re-linked \(relinkedCount) entries, deleted \(stubs.count) BLV-Stubs.")
+            Log.data.info("ProductCleanup: re-linked \(relinkedCount, privacy: .public) entries, \(stubs.count, privacy: .public) Stubs gelöscht")
             defaults.set(true, forKey: cleanupKey)
         } catch {
-            print("[ProductCleanup] Fehler: \(error)")
+            Log.data.error("ProductCleanup Fehler: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

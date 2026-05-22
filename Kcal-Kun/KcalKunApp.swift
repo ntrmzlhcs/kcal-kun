@@ -1,8 +1,5 @@
 import SwiftUI
 import SwiftData
-import os
-
-private let appLogger = Logger(subsystem: "com.martin.kcal-kun", category: "App")
 
 @main
 struct KcalKunApp: App {
@@ -37,17 +34,17 @@ struct KcalKunApp: App {
             let container = try ModelContainer(for: schema)
             return (container, false)
         } catch {
-            appLogger.error("ModelContainer Stufe 1 fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
+            Log.app.error("ModelContainer Stufe 1 fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
         }
 
         // Stufe 2 — alten Store umbenennen und mit frischem Store retry
         moveCorruptStoreAside()
         do {
             let container = try ModelContainer(for: schema)
-            appLogger.warning("ModelContainer Stufe 2 erfolgreich nach Store-Reset")
+            Log.app.warning("ModelContainer Stufe 2 erfolgreich nach Store-Reset")
             return (container, true)
         } catch {
-            appLogger.error("ModelContainer Stufe 2 fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
+            Log.app.error("ModelContainer Stufe 2 fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
         }
 
         // Stufe 3 — In-Memory-Container, damit die App überhaupt startet.
@@ -55,12 +52,12 @@ struct KcalKunApp: App {
         do {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(for: schema, configurations: config)
-            appLogger.fault("ModelContainer im Notfall-Modus (in-memory) gestartet")
+            Log.app.fault("ModelContainer im Notfall-Modus (in-memory) gestartet")
             return (container, true)
         } catch {
             // Wenn selbst ein In-Memory-Container scheitert, ist die Swift-Runtime
             // grundsätzlich kaputt — hier ist ein Crash wirklich unvermeidlich.
-            appLogger.critical("ModelContainer komplett unmöglich: \(error.localizedDescription, privacy: .public)")
+            Log.app.critical("ModelContainer komplett unmöglich: \(error.localizedDescription, privacy: .public)")
             fatalError("ModelContainer konnte auch im Notfall-Modus nicht erstellt werden: \(error)")
         }
     }
@@ -114,6 +111,11 @@ struct KcalKunApp: App {
             // und system-Komponenten konsistent Deutsch (CH) zeigen, unabhängig
             // von der System-Sprache des Geräts.
             .environment(\.locale, Locale(identifier: "de_CH"))
+            // Dynamic Type: User-Präferenz respektieren, aber bei extremen
+            // Accessibility-Größen das Layout nicht sprengen. `.accessibility3`
+            // ist Apple's empfohlener Cap für nicht-text-zentrierte Apps —
+            // grosser Text bleibt lesbar, Layout bleibt intakt.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             // Recovery-Hinweis: wenn der Store-Aufbau fehlgeschlagen ist und auf
             // einen frischen Store ausgewichen wurde, zeigen wir genau einmal
             // einen Alert beim App-Start, damit der User Bescheid weiss.

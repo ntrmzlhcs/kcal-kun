@@ -55,6 +55,12 @@ struct MainTabView: View {
         // Während die Tour aktiv ist, sehen alle Child-Views (Diary, Library, Stats)
         // diesen Flag und rendern ihre Demo-Daten anstelle echter User-Daten.
         .environment(\.coachmarkDemoMode, controller.isActive)
+        // Controller via Environment durchreichen, damit auch Sheet-Inhalte
+        // (z. B. ProfileView) auf den Tour-State reagieren können — z. B. für
+        // Step 12 (Backup), wo eine eingebettete Tour-Banner-Card im Profile-
+        // Sheet erscheinen muss (das Standard-Coachmark-Overlay wird vom Sheet
+        // überdeckt).
+        .environment(controller)
         // Spotlight-Frames via globaler GeometryReader-Messung (siehe CoachmarkAnchorKey).
         // PreferenceChange feuert bei jedem Layout/Scroll → Spotlight folgt automatisch.
         .onPreferenceChange(CoachmarkAnchorKey.self) { frames in

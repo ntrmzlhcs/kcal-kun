@@ -91,7 +91,7 @@ struct ProductDetailView: View {
             ) {
                 Button("Löschen", role: .destructive) {
                     modelContext.delete(product)
-                    try? modelContext.save()
+                    modelContext.saveOrLog("ProductDetail: Produkt gelöscht")
                     dismiss()
                 }
                 Button("Abbrechen", role: .cancel) {}

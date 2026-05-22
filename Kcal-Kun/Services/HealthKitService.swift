@@ -20,7 +20,7 @@ final class HealthKitService {
             isAuthorized = true
             await fetchWorkoutKcal(for: Date())
         } catch {
-            print("[HealthKit] Authorization failed: \(error)")
+            Log.health.error("Authorization failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 

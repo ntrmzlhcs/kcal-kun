@@ -152,7 +152,7 @@ struct MealScanResultView: View {
             )
             modelContext.insert(entry)
         }
-        try? modelContext.save()
+        modelContext.saveOrLog("MealScan: Mahlzeit-Komponenten geloggt")
         vm.reset()
         dismiss()
     }

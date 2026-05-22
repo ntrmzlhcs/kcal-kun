@@ -6,6 +6,11 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(HealthKitService.self) private var healthKit
+    // Optional, weil ProfileView auch ausserhalb des MainTabView-Kontexts (z. B.
+    // in Previews) gerendert werden könnte. Bei aktiver Tour + Step 12 zeigen
+    // wir eine eingebettete Banner-Card + Pulse-Highlight auf Backup-Row.
+    @Environment(CoachmarkController.self) private var coachmarkController
+    @Environment(\.coachmarkDemoMode) private var coachmarkDemo
 
     @Query private var profiles: [UserProfile]
 
@@ -25,6 +30,12 @@ struct ProfileView: View {
     @State private var triggerCoachmarkOnDismiss = false
     @State private var showAboutApp = false
     @State private var showAPIKeySetup = false
+    /// Tracking: wurde dieses Sheet durch die Coachmark-Tour geöffnet?
+    /// Bleibt true bis das Sheet wirklich dismissed (onDisappear) — auch wenn
+    /// die Tour weiter zum nächsten Step geht. So bleibt die NavigationBar
+    /// versteckt während der Sheet-Dismiss-Animation und der „Abbrechen"-
+    /// Button blitzt nicht kurz auf.
+    @State private var sheetOpenedByTour = false
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("selectedMascotTone") private var savedMascotTone = "cream"
@@ -46,29 +57,121 @@ struct ProfileView: View {
         (goalType == .maintenance || parseDouble(kcalDeltaText) != nil)
     }
 
+    /// True wenn die Coachmark-Tour aktiv ist UND aktuell beim Backup-Step
+    /// steht (Step 12). Steuert das eingebettete CoachmarkOverlay im
+    /// Profile-Sheet (dim layer + spotlight + bubble — gleicher Look wie alle
+    /// anderen Tour-Steps).
+    private var isCoachmarkBackupStep: Bool {
+        coachmarkController.isActive
+            && coachmarkController.currentStep < COACH_STEPS.count
+            && COACH_STEPS[coachmarkController.currentStep].target == .profileBackupBtn
+    }
+
+    /// Demo-Werte für die Coachmark-Tour. Das Profil zeigt während der Tour
+    /// NICHT die echten User-Daten — generisches Beispiel-Profil, damit die
+    /// Tour deterministisch ist und kein User-Profil exponiert wird.
+    private func loadDemoProfileData() {
+        heightText      = "175"
+        weightText      = "72"
+        bodyFatText     = "18"
+        bmrText         = "1700"
+        kcalDeltaText   = "300"
+        goalType        = .deficit
+        dietStyle       = .balanced
+        photoData       = nil           // Mascot-Default statt echtem Foto
+        healthKitWeight = 72.4
+        loaded          = true
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.appBackground.ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        avatarSection
-                        bodyDataSection
-                        caloriesSection
-                        dietStyleSection
-                        saveSection
-                        helpSection
-                        aiSetupSection
-                        dataSection
-                        appSection
-                        onboardingResetSection
-                        Spacer().frame(height: 24)
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 20) {
+                            avatarSection
+                            bodyDataSection
+                            caloriesSection
+                            dietStyleSection
+                            saveSection
+                            helpSection
+                            aiSetupSection
+                            dataSection
+                                .id("backupSection")
+                            appSection
+                            onboardingResetSection
+                            Spacer().frame(height: 24)
+                        }
+                        .padding(.top, 12)
                     }
-                    .padding(.top, 12)
+                    // Tour-Step 12: nach Sheet-Open zum Backup-Button scrollen.
+                    // 0.4s Delay deckt die Sheet-Animation ab; ohne Delay greift
+                    // ScrollViewProxy auf eine View, die noch nicht ihr Final-
+                    // Layout hat.
+                    .onChange(of: isCoachmarkBackupStep) { _, active in
+                        guard active else { return }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            withAnimation(.easeInOut(duration: 0.45)) {
+                                proxy.scrollTo("backupSection", anchor: .center)
+                            }
+                        }
+                    }
+                    .onAppear {
+                        // Falls Sheet bereits in Tour-Mode startet (Hot-Reload,
+                        // Re-Mount): gleicher Scroll-Trigger.
+                        if isCoachmarkBackupStep {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                withAnimation(.easeInOut(duration: 0.45)) {
+                                    proxy.scrollTo("backupSection", anchor: .center)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Eingebettetes Coachmark-Overlay für Step 12 (Backup).
+                // SwiftUI-Sheets überdecken das normale CoachmarkOverlay auf
+                // MainTabView; deshalb mounten wir es hier nochmal mit demselben
+                // Controller. Selber Look, gleicher State.
+                if isCoachmarkBackupStep {
+                    CoachmarkOverlay(controller: coachmarkController)
+                        .transition(.opacity)
+                        .zIndex(100)
+                        .ignoresSafeArea()
+                }
+            }
+            // Übergang animieren — sonst verschwindet das Overlay synchron mit
+            // dem Step-Change und wirkt ruckelig. .easeInOut deckt die ~0.3s
+            // bis das Sheet schliesst und gibt ein smoother Fade-Out.
+            .animation(.easeInOut(duration: 0.3), value: isCoachmarkBackupStep)
+            // Spotlight-Tracking innerhalb des Sheets: misst die Position der
+            // Backup-Row und schreibt sie in den geteilten spotlightRect.
+            .onPreferenceChange(CoachmarkAnchorKey.self) { frames in
+                guard isCoachmarkBackupStep,
+                      let frame = frames[.profileBackupBtn] else { return }
+                let padded = frame.insetBy(dx: -8, dy: -8)
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    coachmarkController.spotlightRect = padded
+                }
+            }
+            .onChange(of: isCoachmarkBackupStep) { _, isActive in
+                // Beim Verlassen des Backup-Steps Spotlight zurücksetzen, sonst
+                // bleibt MainTabView's spotlightRect auf einer alten Profile-
+                // Sheet-Position kleben (z.B. wenn das Sheet wegschwenkt).
+                if !isActive {
+                    coachmarkController.spotlightRect = .zero
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            // NavigationBar versteckt solange das Sheet via Tour geöffnet ist
+            // — auch während der Dismiss-Animation. Sonst würde beim Step-
+            // Wechsel der „Abbrechen"-Button kurz aufblitzen (weil
+            // isCoachmarkBackupStep synchron false wird, aber das Sheet erst
+            // ~0.3-0.7s später wirklich schliesst). `sheetOpenedByTour` bleibt
+            // true bis onDisappear.
+            .toolbar(sheetOpenedByTour ? .hidden : .visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Profil")
@@ -101,6 +204,10 @@ struct ProfileView: View {
                 )
             }
             .onDisappear {
+                // Tour-Sheet-Flag zurücksetzen — sheetOpenedByTour wird beim
+                // nächsten Tour-Run via onAppear neu gesetzt. So bleibt die
+                // NavBar bei manuellem Re-Open korrekt sichtbar.
+                sheetOpenedByTour = false
                 if triggerCoachmarkOnDismiss {
                     triggerCoachmarkOnDismiss = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
@@ -109,7 +216,21 @@ struct ProfileView: View {
                 }
             }
             .onAppear {
-                guard !loaded, let p = profile else { loaded = true; return }
+                // Tour-Sheet-Tracking: wenn das Sheet via Tour aufgerufen wird,
+                // diesen Flag setzen. Steuert die NavBar-Sichtbarkeit für die
+                // gesamte Lebensdauer des Sheets (auch während Dismiss-Anim).
+                if isCoachmarkBackupStep {
+                    sheetOpenedByTour = true
+                }
+                guard !loaded else { return }
+                // Während der Coachmark-Tour (Backup-Step) zeigen wir Demo-
+                // Daten statt der echten User-Profil-Werte. Schützt die
+                // Privatsphäre und macht die Tour auf jedem Gerät identisch.
+                if coachmarkDemo {
+                    loadDemoProfileData()
+                    return
+                }
+                guard let p = profile else { loaded = true; return }
                 heightText    = formatDouble(p.heightCm)
                 weightText    = formatDouble(p.weightKg)
                 bmrText       = formatDouble(p.bmr)
@@ -121,6 +242,9 @@ struct ProfileView: View {
                 loaded        = true
             }
             .task {
+                // HealthKit-Fetch im Demo-Mode überspringen — sonst würde das
+                // echte Gewicht über die Demo-Werte gelegt.
+                guard !coachmarkDemo else { return }
                 if let avg = await healthKit.fetchLatestWeightAverage() {
                     healthKitWeight = avg
                     weightText = formatDouble(avg)
@@ -516,6 +640,11 @@ struct ProfileView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Color.inkDivider, lineWidth: 1))
+            // WICHTIG: Coachmark-Target VOR .padding setzen, damit die
+            // GeometryReader das sichtbare Card-Frame misst und NICHT den
+            // äusseren Padding-Wrapper (sonst wäre der Spotlight 36pt zu
+            // breit — die Padding-Zonen lägen ausserhalb der Card).
+            .coachmarkTarget(.profileBackupBtn)
             .padding(.horizontal, 18)
         }
     }
@@ -630,6 +759,13 @@ struct ProfileView: View {
     }
 
     private func save() {
+        // Tour-Modus: nicht in den echten ModelContext schreiben — sonst
+        // würden die Demo-Werte das echte User-Profil überschreiben.
+        if coachmarkDemo {
+            Log.ui.info("ProfileView: Save während Coachmark-Tour ignoriert (Demo-Werte)")
+            dismiss()
+            return
+        }
         guard let h = parseDouble(heightText),
               let w = parseDouble(weightText),
               let b = parseDouble(bmrText) else { return }
@@ -648,7 +784,7 @@ struct ProfileView: View {
         p.dietStyle      = dietStyle
         p.photoData      = photoData
         p.bodyFatPercent = parseDouble(bodyFatText)
-        try? modelContext.save()
+        modelContext.saveOrLog("ProfileView: Profil aktualisiert")
         dismiss()
     }
 }

@@ -211,7 +211,7 @@ struct DishScanResultView: View {
             grams:    vm.grams
         )
         modelContext.insert(entry)
-        try? modelContext.save()
+        modelContext.saveOrLog("DishScanResultView: Gericht geloggt")
 
         vm.reset()
         dismiss()

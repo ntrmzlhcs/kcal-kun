@@ -375,6 +375,25 @@ struct GeminiService {
         return text
     }
 
+    /// Sanitisiert einen User-controlled String für sichere Einbettung in
+    /// einen LLM-Prompt. Verhindert Prompt-Injection-Versuche, bei denen ein
+    /// böswilliger Produktname Steuer-Sequenzen oder „Ignore previous
+    /// instructions"-Tricks enthält:
+    /// - Newlines und Tabs werden zu Leerzeichen (Prompt-Struktur bleibt intakt)
+    /// - Control-Characters werden entfernt
+    /// - Backticks werden escaped (wir wrappen das Ergebnis in Backticks unten)
+    /// - Länge auf 80 Zeichen begrenzt (typische Produktnamen sind <40 Zeichen)
+    private static func sanitizeForPrompt(_ raw: String) -> String {
+        let cleaned = raw
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
+            .replacingOccurrences(of: "\t", with: " ")
+            .replacingOccurrences(of: "`", with: "'")
+            .components(separatedBy: .controlCharacters).joined()
+            .trimmingCharacters(in: .whitespaces)
+        return String(cleaned.prefix(80))
+    }
+
     static func buildNutritionPrompt(
         entries: [DiaryEntry],
         workoutKcals: [Date: Double],
@@ -479,7 +498,10 @@ struct GeminiService {
                 recentLines += "\n  (keine Einträge)"
             } else {
                 for entry in dayEntries {
-                    recentLines += "\n  - \(entry.product?.name ?? entry.productName), \(Int(entry.grams.rounded()))g"
+                    // Produktname sanitisieren + in Backticks einbetten, damit das LLM
+                    // erkennt: das ist Daten-Inhalt, keine Instruktion.
+                    let safeName = sanitizeForPrompt(entry.product?.name ?? entry.productName)
+                    recentLines += "\n  - `\(safeName)`, \(Int(entry.grams.rounded()))g"
                 }
             }
         }

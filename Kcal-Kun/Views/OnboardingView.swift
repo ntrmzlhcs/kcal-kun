@@ -199,7 +199,7 @@ struct OnboardingView: View {
             .padding(.bottom, 14)
 
             Text("Ich helfe dir, deine Kalorien und Makros zu tracken. KI liest deine Etiketten — deine Daten bleiben lokal, ohne Account, ohne Cloud.")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
@@ -750,7 +750,7 @@ struct OnboardingView: View {
         profile.goalType  = isMaintenanceGoal ? .maintenance : selectedGoal
         profile.dietStyle = selectedDietStyle
         profile.photoData = selectedPhotoData
-        try? modelContext.save()
+        modelContext.saveOrLog("Onboarding: Profil erstellt")
 
         savedMascotTone = mascotTone
         hasCompletedOnboarding = true

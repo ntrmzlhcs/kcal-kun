@@ -201,7 +201,7 @@ struct LibraryView: View {
                     }
                     .onDelete { indexSet in
                         for i in indexSet { modelContext.delete(myProducts[i]) }
-                        try? modelContext.save()
+                        modelContext.saveOrLog("LibraryView: Produkt gelöscht")
                     }
                 }
             } header: {

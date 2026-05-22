@@ -53,7 +53,7 @@ final class ScannerViewModel {
             barcode: barcode
         )
         context.insert(product)
-        try? context.save()
+        context.saveOrLog("Scanner: OCR-Produkt gespeichert")
         reset()
     }
 

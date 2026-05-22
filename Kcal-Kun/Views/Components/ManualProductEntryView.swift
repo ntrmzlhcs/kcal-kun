@@ -209,7 +209,7 @@ struct ManualProductEntryView: View {
             )
             modelContext.insert(product)
         }
-        try? modelContext.save()
+        modelContext.saveOrLog("ManualProductEntry: Produkt gespeichert")
         dismiss()
     }
 

@@ -11,7 +11,7 @@ struct AboutAppView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var safariURL: URL?
 
-    // GitHub-Pages URLs (siehe Docs/legal/ im kcal-kun-site Repo)
+    // GitHub-Pages URLs (siehe docs/legal/ im gleichen Repo, deployed via main /docs)
     private let privacyURL    = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/privacy.html")!
     private let imprintURL    = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/imprint.html")!
     private let termsURL      = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/terms.html")!
