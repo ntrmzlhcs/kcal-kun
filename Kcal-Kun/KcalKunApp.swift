@@ -112,7 +112,7 @@ struct KcalKunApp: App {
             // von der System-Sprache des Geräts.
             .environment(\.locale, Locale(identifier: "de_CH"))
             // Dynamic Type: User-Präferenz respektieren, aber bei extremen
-            // Accessibility-Größen das Layout nicht sprengen. `.accessibility3`
+            // Accessibility-Grössen das Layout nicht sprengen. `.accessibility3`
             // ist Apple's empfohlener Cap für nicht-text-zentrierte Apps —
             // grosser Text bleibt lesbar, Layout bleibt intakt.
             .dynamicTypeSize(...DynamicTypeSize.accessibility3)

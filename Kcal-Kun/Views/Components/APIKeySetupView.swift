@@ -215,6 +215,14 @@ struct APIKeySetupView: View {
                     .foregroundStyle(Color.inkPrimary)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        // Return-Key auf dem Keyboard löst direkt die Validierung
+                        // aus — ein UX-Win für User, die den Key pasten und nicht
+                        // erst noch zum „Speichern & prüfen"-Button greifen wollen.
+                        guard canValidate else { return }
+                        Task { await validate() }
+                    }
                     .onChange(of: keyText) { _, _ in
                         if case .error = validationState { validationState = .idle }
                         if validationState == .success { validationState = .idle }

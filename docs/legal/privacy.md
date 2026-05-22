@@ -26,7 +26,7 @@ Es gibt vier Funktionen, die Daten an externe Server senden — **alle direkt vo
 - **Verarbeitete Daten:** Foto der Nährwerttabelle
 - **Empfänger:** Google Gemini API (USA / weltweite Rechenzentren)
 - **Zweck:** Extraktion der Nährwerte (kcal, Protein, Fett, KH, etc.)
-- **Speicherung bei Google:** Gemäß deinen Google-Cloud-Einstellungen (typischerweise temporäre Verarbeitung ohne dauerhafte Speicherung)
+- **Speicherung bei Google:** Gemäss deinen Google-Cloud-Einstellungen (typischerweise temporäre Verarbeitung ohne dauerhafte Speicherung)
 
 ### 2.2 Gericht-Analyse (Mahlzeit fotografieren)
 
@@ -39,7 +39,7 @@ Es gibt vier Funktionen, die Daten an externe Server senden — **alle direkt vo
 
 - **Verarbeitete Daten:**
   - Tagebuch-Einträge der letzten 30 Tage als Text (Produktnamen, kcal, Makros, Datum, Mahlzeit-Slot)
-  - Profil-Daten: Größe, Gewicht, Grundumsatz (BMR), Tagesziel-Delta, gewählter Ernährungsstil, Goal-Type (Defizit/Halten/Aufbau), ggf. Körperfett-%
+  - Profil-Daten: Grösse, Gewicht, Grundumsatz (BMR), Tagesziel-Delta, gewählter Ernährungsstil, Goal-Type (Defizit/Halten/Aufbau), ggf. Körperfett-%
   - Gewichtsverlauf der letzten 30 Tage (aus HealthKit, falls verfügbar und freigegeben)
   - Workout-Kalorien der letzten 30 Tage (aus HealthKit, falls verfügbar und freigegeben)
 - **Empfänger:** Google Gemini API
@@ -81,7 +81,7 @@ Wenn du die KI-Funktionen nutzt, baut die App eine direkte Verbindung mit Google
 
 Da die Datenübermittlung direkt über deinen persönlichen API-Key erfolgt, **liegt die Wahl des Datenschutz-Niveaus und die Verantwortung dafür vollständig bei dir**. Die App kann das Tier-Level deines Keys nicht erkennen oder beeinflussen.
 
-**HealthKit-Daten:** Die Übermittlung von HealthKit-Daten (Gewicht, Workouts) an Google erfolgt **ausschließlich**, wenn du die KI-Ernährungsanalyse im Statistik-Tab **aktiv per Knopfdruck startest**. Ohne diese Aktion bleibt HealthKit lokal auf deinem Gerät.
+**HealthKit-Daten:** Die Übermittlung von HealthKit-Daten (Gewicht, Workouts) an Google erfolgt **ausschliesslich**, wenn du die KI-Ernährungsanalyse im Statistik-Tab **aktiv per Knopfdruck startest**. Ohne diese Aktion bleibt HealthKit lokal auf deinem Gerät.
 
 - **Google Privacy Policy:** [policies.google.com/privacy](https://policies.google.com/privacy)
 - **Gemini API Terms:** [ai.google.dev/terms](https://ai.google.dev/terms)
@@ -102,7 +102,7 @@ Open Food Facts ist ein crowd-sourced Projekt, das Lebensmittel-Daten von Freiwi
 
 ### 4.3 Apple Inc.
 
-Der App-Kauf (einmalig CHF 4.90) wird über Apple's App Store abgewickelt. Apple verarbeitet die Zahlung gemäß deren Datenschutzrichtlinie.
+Der App-Kauf (einmalig CHF 4.90) wird über Apple's App Store abgewickelt. Apple verarbeitet die Zahlung gemäss deren Datenschutzrichtlinie.
 
 - **Apple Privacy Policy:** [apple.com/privacy](https://www.apple.com/privacy/)
 
@@ -111,7 +111,7 @@ Der App-Kauf (einmalig CHF 4.90) wird über Apple's App Store abgewickelt. Apple
 ## 5. Speicherdauer
 
 - **Lokal auf deinem Gerät:** Die Daten bleiben so lange gespeichert, bis du sie selbst löschst oder die App deinstallierst.
-- **Bei Google:** Server-seitige Speicherung gemäß deinen eigenen Google-Cloud-Einstellungen.
+- **Bei Google:** Server-seitige Speicherung gemäss deinen eigenen Google-Cloud-Einstellungen.
 - **Beim App-Anbieter:** Gar nichts. Wir betreiben keinen Server, der deine Daten verarbeitet oder speichert.
 
 ---

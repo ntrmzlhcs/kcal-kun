@@ -127,6 +127,13 @@ struct GeminiService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        // Cancellation-Check direkt vor dem Network-Call: spart Gemini-Tokens
+        // wenn User die View bereits dismissed hat (z. B. Scanner-Sheet
+        // weggeschwischt während Image-Encoding lief). URLSession.shared.data
+        // ist cancellation-aware, aber wir prüfen frühzeitig damit gar nicht
+        // erst aufs Network gegangen wird.
+        try Task.checkCancellation()
+
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await URLSession.shared.data(for: request)
@@ -187,6 +194,13 @@ struct GeminiService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        // Cancellation-Check direkt vor dem Network-Call: spart Gemini-Tokens
+        // wenn User die View bereits dismissed hat (z. B. Scanner-Sheet
+        // weggeschwischt während Image-Encoding lief). URLSession.shared.data
+        // ist cancellation-aware, aber wir prüfen frühzeitig damit gar nicht
+        // erst aufs Network gegangen wird.
+        try Task.checkCancellation()
 
         let (data, response): (Data, URLResponse)
         do {
@@ -275,6 +289,13 @@ struct GeminiService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        // Cancellation-Check direkt vor dem Network-Call: spart Gemini-Tokens
+        // wenn User die View bereits dismissed hat (z. B. Scanner-Sheet
+        // weggeschwischt während Image-Encoding lief). URLSession.shared.data
+        // ist cancellation-aware, aber wir prüfen frühzeitig damit gar nicht
+        // erst aufs Network gegangen wird.
+        try Task.checkCancellation()
+
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await URLSession.shared.data(for: request)
@@ -337,6 +358,13 @@ struct GeminiService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        // Cancellation-Check direkt vor dem Network-Call: spart Gemini-Tokens
+        // wenn User die View bereits dismissed hat (z. B. Scanner-Sheet
+        // weggeschwischt während Image-Encoding lief). URLSession.shared.data
+        // ist cancellation-aware, aber wir prüfen frühzeitig damit gar nicht
+        // erst aufs Network gegangen wird.
+        try Task.checkCancellation()
 
         let (data, response): (Data, URLResponse)
         do {

@@ -20,14 +20,14 @@ Diese Nutzungsbedingungen gelten für die Nutzung der iOS-App „Kcal-Kun". Mit 
 - **Preis:** einmalig CHF 4.90 (oder Äquivalent in lokaler Währung)
 - **Vertragspartner:** Der Kaufvertrag kommt zwischen dir und Apple zustande (über den App Store). Der Anbieter (Martin Schulz) ist Apple's Zulieferer und steht in keiner direkten Vertragsbeziehung zum End-Kunden.
 - **Apple's Bedingungen:** Für die Kauf- und Rückgabeabwicklung gelten Apple's Allgemeine Geschäftsbedingungen.
-- **Widerrufsrecht:** Da der Kauf vollständig über Apples App Store abgewickelt wird, gelten für Widerruf oder Rückerstattungen ausschließlich die Richtlinien von Apple. Verbraucherinnen und Verbraucher aus der EU/EWR müssen sich für Rückerstattungsansprüche direkt an den Apple Support wenden ([reportaproblem.apple.com](https://reportaproblem.apple.com)).
+- **Widerrufsrecht:** Da der Kauf vollständig über Apples App Store abgewickelt wird, gelten für Widerruf oder Rückerstattungen ausschliesslich die Richtlinien von Apple. Verbraucherinnen und Verbraucher aus der EU/EWR müssen sich für Rückerstattungsansprüche direkt an den Apple Support wenden ([reportaproblem.apple.com](https://reportaproblem.apple.com)).
 
 ## 3. Eigener Google-Gemini-API-Key erforderlich
 
 Die KI-Funktionen der App (OCR-Scanner für Nährwerttabellen, Gericht-Analyse, KI-Ernährungsanalyse) erfordern **einen eigenen, persönlichen Google-Gemini-API-Key**.
 
 - **Anleitung:** Die App enthält eine Anleitung, wie du einen Key kostenlos in Google AI Studio erstellst (mit Tageslimit im Free-Tier — für normale Privatnutzung reicht das in der Regel).
-- **Eigene Kosten:** Allfällige Kosten durch deine Nutzung des Google-Gemini-Service trägst du selbst, gemäß deinen eigenen Google-Cloud-Konditionen.
+- **Eigene Kosten:** Allfällige Kosten durch deine Nutzung des Google-Gemini-Service trägst du selbst, gemäss deinen eigenen Google-Cloud-Konditionen.
 - **Eigene Verantwortung:** Du bist verantwortlich für die sichere Verwahrung deines API-Keys und die Einhaltung der Nutzungsbedingungen von Google.
 - **Keine Verantwortung des App-Anbieters:** Der App-Anbieter haftet nicht für Kosten, Ausfälle, Datenschutzprobleme oder andere Sachverhalte, die im Verhältnis zwischen dir und Google entstehen.
 
@@ -45,7 +45,7 @@ Die KI-Funktionen der App (OCR-Scanner für Nährwerttabellen, Gericht-Analyse, 
 
 - Diese Funktion liefert reine **Schätzungen** — Erfahrungswerte zeigen Abweichungen von 20–35% vom tatsächlichen Wert.
 - Versteckte Zutaten (Öl, Butter, Saucen, Toppings) sind besonders fehleranfällig.
-- Portionsgrößen werden geschätzt und können erheblich abweichen.
+- Portionsgrössen werden geschätzt und können erheblich abweichen.
 - Vor dem Speichern Werte prüfen und gegebenenfalls anpassen.
 
 ### 4.3 KI-Ernährungsanalyse (30 Tage Auswertung)

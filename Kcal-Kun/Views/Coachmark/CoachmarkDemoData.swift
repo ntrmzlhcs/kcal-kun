@@ -93,7 +93,7 @@ enum CoachmarkDemoData {
 
     // MARK: - Weight Chart (Step 9)
 
-    /// 30 Tage Demo-Gewicht: gleichmäßiger Abwärtstrend von 75.5 → 74.0 kg
+    /// 30 Tage Demo-Gewicht: gleichmässiger Abwärtstrend von 75.5 → 74.0 kg
     /// mit kleinen täglichen Schwankungen — wirkt wie echte HealthKit-Daten.
     /// Format matched mit `HealthKitService.fetchRollingAverageWeights` → `[Date: Double]`.
     static var demoRollingWeights: [Date: Double] {
@@ -140,7 +140,7 @@ enum CoachmarkDemoData {
           "meals": [
             {"name": "Haferflocken mit Magerquark", "portions": "1 Portion", "macros": "350 kcal · 25g P"},
             {"name": "Hähnchensalat mit Quinoa", "portions": "1 Portion", "macros": "480 kcal · 38g P"},
-            {"name": "Lachs mit Süßkartoffel", "portions": "1 Portion", "macros": "520 kcal · 32g P"}
+            {"name": "Lachs mit Süsskartoffel", "portions": "1 Portion", "macros": "520 kcal · 32g P"}
           ]
         }
       ]

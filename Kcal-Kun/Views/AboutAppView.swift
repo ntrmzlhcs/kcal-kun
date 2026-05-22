@@ -11,11 +11,14 @@ struct AboutAppView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var safariURL: URL?
 
-    // GitHub-Pages URLs (siehe docs/legal/ im gleichen Repo, deployed via main /docs)
-    private let privacyURL    = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/privacy.html")!
-    private let imprintURL    = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/imprint.html")!
-    private let termsURL      = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/terms.html")!
-    private let geminiHelpURL = URL(string: "https://aistudio.google.com/app/apikey")!
+    // GitHub-Pages URLs (siehe docs/legal/ im gleichen Repo, deployed via main /docs).
+    // Sichere URL-Konstruktion ohne Force-Unwrap — fallback ist `about:blank`
+    // (würde im SafariView eine leere Seite zeigen statt zu crashen, falls die
+    // konstanten Strings je versehentlich beschädigt werden).
+    private let privacyURL    = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/privacy.html") ?? URL(string: "about:blank")!
+    private let imprintURL    = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/imprint.html") ?? URL(string: "about:blank")!
+    private let termsURL      = URL(string: "https://ntrmzlhcs.github.io/kcal-kun/legal/terms.html")   ?? URL(string: "about:blank")!
+    private let geminiHelpURL = URL(string: "https://aistudio.google.com/app/apikey")                 ?? URL(string: "about:blank")!
 
     @AppStorage("selectedMascotTone") private var savedMascotTone = "cream"
 

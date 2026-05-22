@@ -3,6 +3,19 @@ import SwiftData
 
 struct LibraryView: View {
     @Environment(\.modelContext) private var modelContext
+
+    // Favoriten via SwiftData-Predicate → SQLite-Lazy-Loading. Bei wachsenden
+    // Bibliotheken (5'000+ Items aus Backup-Restore) zieht die Favoriten-Liste
+    // nicht mehr alle Items in den RAM. Filter-Suche bleibt clientside in
+    // Memory (siehe Suche-Computed-Property unten) — bei typisch <50 Favoriten
+    // ein vernachlässigbarer Cost.
+    @Query(filter: #Predicate<Product> { $0.isFavorite }, sort: \Product.name)
+    private var favoriteProducts: [Product]
+
+    // Restliche Produkte (alle Sources, Filter passiert in Memory).
+    // Source-Filtering via #Predicate ist mit dem aktuellen `ProductSource`-
+    // Enum noch nicht trivial — Migration auf rohstring-basierte Spalte oder
+    // Multi-Query-Pattern wäre für eine 1.1 ein lohnender Folge-Schritt.
     @Query(sort: \Product.name) private var allProducts: [Product]
 
     @State private var searchText = ""
@@ -11,9 +24,8 @@ struct LibraryView: View {
     @Environment(\.coachmarkDemoMode) private var coachmarkDemo
 
     private var favorites: [Product] {
-        let base = allProducts.filter { $0.isFavorite }
-        guard !searchText.isEmpty else { return base }
-        return base.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        guard !searchText.isEmpty else { return favoriteProducts }
+        return favoriteProducts.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
 
     private var myProducts: [Product] {

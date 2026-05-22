@@ -32,12 +32,12 @@ Martin Schulz, Anschrift wie oben.
 
 ## Online-Streitbeilegung
 
-Hinweis gemäß EU-Verordnung Nr. 524/2013: Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit, die du hier findest: [ec.europa.eu/consumers/odr/](https://ec.europa.eu/consumers/odr/)
+Hinweis gemäss EU-Verordnung Nr. 524/2013: Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit, die du hier findest: [ec.europa.eu/consumers/odr/](https://ec.europa.eu/consumers/odr/)
 
 Der Anbieter ist **nicht bereit oder verpflichtet**, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
 
 ## Haftungsausschluss
 
-Trotz sorgfältiger inhaltlicher Kontrolle übernimmt der Anbieter keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.
+Trotz sorgfältiger inhaltlicher Kontrolle übernimmt der Anbieter keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschliesslich deren Betreiber verantwortlich.
 
 Die KI-Funktionen der App (OCR-Scanner, Gericht-Analyse, KI-Ernährungsanalyse) liefern **Schätzungen ohne Gewähr**. Detaillierte Hinweise zur Genauigkeit und zu Einschränkungen findest du in den AGB.
